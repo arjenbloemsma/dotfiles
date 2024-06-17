@@ -1,0 +1,46 @@
+import = [
+  "~/.config/alacritty/catppuccin-mocha.toml"
+]
+
+[colors.vi_mode_cursor]
+cursor = "CellForeground"
+text = "CellBackground"
+
+[cursor]
+vi_mode_style = "Underline"
+
+[font]
+size = 14.5
+
+[font.normal]
+family = "JetBrainsMono Nerd Font Mono"
+style = "Regular"
+
+[font.italic]
+family = "JetBrainsMono Nerd Font Mono"
+style = "Italic"
+
+[mouse]
+hide_when_typing = true
+
+[window]
+blur = true
+decorations = "Buttonless"
+dynamic_padding = true
+dynamic_title = true
+opacity = 0.88
+option_as_alt = "Both"
+startup_mode = "Windowed"
+
+[window.dimensions]
+columns = 180
+lines = 50
+
+[window.padding]
+x = 7
+y = 7
+
+[window.position]
+x = 350
+y = 0
+
