@@ -1,8 +1,16 @@
 background-opacity = 0.95
 background-blur-radius = 20
-theme = catppuccin-mocha
+theme = catppuccin-mocha.conf
 font-feature = -liga
 font-feature = -calt
 font-size = 14.5
 font-family = "JetBrainsMono Nerd Font Mono"
 font-family-italic = "JetBrainsMono Nerd Font Mono"
+macos-titlebar-proxy-icon = hidden
+title = " "
+
+# Shell integration provides features like prompt jumping, smart terminal closing,
+# and command output selection by injecting escape sequences into the shell.
+# Disabled because it causes Yazi to malfunction: when launching yazi with 'yy',
+# it would switch tmux panes and write corrupt escape sequences (\?62;22;52c).
+shell-integration = none
