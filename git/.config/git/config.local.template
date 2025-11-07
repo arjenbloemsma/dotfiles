@@ -1,4 +1,4 @@
-# Copy this file to ~/.gitconfig.local and fill in your details
+# Copy this file to ~/.config/git/config.local and fill in your details
 # This file should NOT be tracked in git
 
 [user]

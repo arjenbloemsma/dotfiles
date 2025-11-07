@@ -1,0 +1,8 @@
+# This is Git's per-user configuration file.
+# User details (name/email) are in ~/.config/git/config.local (not tracked)
+
+[init]
+	defaultBranch = trunk
+
+[include]
+	path = ~/.config/git/config.local

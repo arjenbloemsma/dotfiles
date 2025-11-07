@@ -1,4 +1,7 @@
-.git
-.DS_Store
-.gitconfig
-.ssh/config
+\.git
+\.DS_Store
+\.gitignore
+\.stow-local-ignore
+README\.md
+LICENSE
+install\.sh
