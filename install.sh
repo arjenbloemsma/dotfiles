@@ -15,6 +15,7 @@ BACKUP_BASE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/backup"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="$BACKUP_BASE_DIR/dotfiles_$TIMESTAMP"
 DRY_RUN=false
+VERBOSE=false
 ROLLBACK_TIMESTAMP=""
 
 PACKAGES=(
@@ -32,19 +33,24 @@ PACKAGES=(
 # Execute or dry-run a command
 execute() {
     if [[ "$DRY_RUN" == true ]]; then
-        echo -e "${BLUE}→${NC} Would run: $*"
+        [[ "$VERBOSE" == true ]] && echo -e "${BLUE}→${NC} Would run: $*"
     else
         "$@"
     fi
 }
 
-# Print message respecting dry-run
+# Print message respecting dry-run and verbose
 print_action() {
     local message="$1"
-    if [[ "$DRY_RUN" == true ]]; then
-        echo -e "${BLUE}→${NC} Would $message"
-    else
-        echo -e "${BLUE}→${NC} $message"
+    local force="${2:-false}"
+
+    # Always print if force=true, otherwise respect verbose
+    if [[ "$force" == true ]] || [[ "$VERBOSE" == true ]]; then
+        if [[ "$DRY_RUN" == true ]]; then
+            echo -e "${BLUE}→${NC} Would $message"
+        else
+            echo -e "${BLUE}→${NC} $message"
+        fi
     fi
 }
 
@@ -72,7 +78,7 @@ backup_file() {
     if [[ -e "$file" ]] && [[ ! -L "$file" ]]; then
         execute mkdir -p "$(dirname "$backup_path")"
         execute cp -r "$file" "$backup_path"
-        print_action "backup: $relative_path"
+        print_action "backup: $relative_path" false
         return 0
     fi
     return 1
@@ -81,22 +87,55 @@ backup_file() {
 # Check for conflicts in a package
 check_package_conflicts() {
     local package="$1"
+    local -a conflict_files=()
 
     cd "$DOTFILES_DIR/$package"
 
-    while IFS= read -r -d '' file; do
-        local relative_path="${file#./}"
-        local target_file="$HOME/$relative_path"
+    # Let stow determine which files would be installed
+    # Use stow's simulation to get the list
+    local stow_files
+    stow_files=$(stow --no --verbose=2 "$package" 2>&1 | grep "LINK:" | awk '{print $3}')
 
-        if [[ -e "$target_file" ]] && [[ ! -L "$target_file" ]]; then
-            backup_file "$target_file"
-        elif [[ -L "$target_file" ]]; then
+    while IFS= read -r target_path; do
+        [[ -z "$target_path" ]] && continue
+
+        local target_file="$HOME/$target_path"
+
+        # Skip if target doesn't exist
+        [[ ! -e "$target_file" ]] && continue
+
+        # Check if it's a real file (conflict) or wrong symlink
+        if [[ ! -L "$target_file" ]]; then
+            # Real file - conflict
+            conflict_files+=("$target_path")
+        else
+            # Symlink - check if points to our dotfiles
             local link_target=$(readlink "$target_file")
-            if [[ "$link_target" != "$DOTFILES_DIR/$package/$relative_path" ]]; then
-                backup_file "$target_file"
+            local expected_prefix="$DOTFILES_DIR/$package"
+
+            # Check if symlink points to our dotfiles
+            if [[ ! "$link_target" =~ ^$expected_prefix ]]; then
+                conflict_files+=("$target_path")
             fi
         fi
-    done < <(find . -type f -print0)
+    done <<< "$stow_files"
+
+    # Print summary if conflicts found
+    if [[ ${#conflict_files[@]} -gt 0 ]]; then
+        local count=${#conflict_files[@]}
+        if [[ $count -le 3 ]]; then
+            for file in "${conflict_files[@]}"; do
+                echo -e "${YELLOW}  ⚠${NC} $file"
+            done
+        else
+            echo -e "${YELLOW}  ⚠${NC} ${conflict_files[0]}"
+            echo -e "${YELLOW}  ⚠${NC} ${conflict_files[1]}"
+            echo -e "${YELLOW}  ⚠${NC} ... and $((count - 2)) more files"
+        fi
+        return 0
+    fi
+
+    return 1
 }
 
 # Setup git config.local
@@ -109,12 +148,12 @@ setup_git_config() {
     if [[ -f "$config_local" ]]; then
         echo -e "${GREEN}✓${NC} Git config.local exists"
     elif [[ -f "$old_config" ]]; then
-        print_action "migrate $old_config to XDG location"
+        print_action "migrate $old_config to XDG location" true
         execute mkdir -p "$HOME/.config/git"
         execute mv "$old_config" "$config_local"
     else
         echo -e "${YELLOW}⚠${NC} $config_local not found"
-        print_action "create from template"
+        print_action "create from template" true
         execute mkdir -p "$HOME/.config/git"
         execute cp "$DOTFILES_DIR/git/.config/git/config.local.template" "$config_local"
         echo -e "${YELLOW}→${NC} Edit $config_local with your name and email"
@@ -127,11 +166,19 @@ setup_git_config() {
 check_all_conflicts() {
     echo "Checking for conflicts..."
 
+    local has_conflicts=0
+
     for package in "${PACKAGES[@]}"; do
         if [[ -d "$DOTFILES_DIR/$package" ]]; then
-            check_package_conflicts "$package"
+            if check_package_conflicts "$package"; then
+                has_conflicts=1
+            fi
         fi
     done
+
+    if [[ $has_conflicts -eq 0 ]]; then
+        echo -e "${GREEN}✓${NC} No conflicts found"
+    fi
 
     echo ""
 }
@@ -244,13 +291,17 @@ parse_args() {
                 DRY_RUN=true
                 shift
                 ;;
+            --verbose|-v)
+                VERBOSE=true
+                shift
+                ;;
             --rollback)
                 ROLLBACK_TIMESTAMP="$2"
                 shift 2
                 ;;
             *)
                 echo -e "${RED}Unknown option: $1${NC}"
-                echo "Usage: $0 [--dry-run] [--rollback TIMESTAMP]"
+                echo "Usage: $0 [--dry-run] [--verbose|-v] [--rollback TIMESTAMP]"
                 exit 1
                 ;;
         esac
@@ -272,7 +323,9 @@ main() {
     echo ""
 
     # Setup backup directory
-    execute mkdir -p "$BACKUP_DIR/files"
+    if [[ "$DRY_RUN" == false ]]; then
+        mkdir -p "$BACKUP_DIR/files"
+    fi
     echo "Backup directory: $BACKUP_DIR"
     echo ""
 
