@@ -2,12 +2,11 @@
 
 Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
-## Prerequisites
+## Supported Systems
 
 - macOS
-- [Homebrew](https://brew.sh/)
-- GNU Stow: `brew install stow`
-- Git
+- Ubuntu/Debian
+- Arch/Manjaro
 
 ## Packages
 
@@ -23,7 +22,24 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
 ## Installation
 
-### Fresh Install
+### Fresh Install (New System)
+
+Run bootstrap script (installs prerequisites, clones repo, runs install):
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/main/bootstrap.sh)
+```
+
+Or manually:
+
+```bash
+# Download bootstrap script
+curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/main/bootstrap.sh -o bootstrap.sh
+chmod +x bootstrap.sh
+./bootstrap.sh
+```
+
+### Manual Install (Already Cloned)
 
 1. Clone repository:
    ```bash
@@ -31,21 +47,19 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
    cd ~/dotfiles
    ```
 
-2. Create local git config with your details:
+2. Run install script:
    ```bash
-   cp git/.gitconfig.local.template ~/.gitconfig.local
-   # Edit ~/.gitconfig.local with your name and email
+   ./install.sh
    ```
 
-3. Install packages (use `./install.sh` when available, or manually):
+3. Configure git user details:
    ```bash
-   stow git zsh ghostty starship tmux yabai skhd yazi gh
+   # Edit ~/.config/git/config.local with your name and email
    ```
 
 4. Install tmux plugins:
    ```bash
    # Press prefix + I (capital i) in tmux to install plugins
-   # Or run: ~/.config/tmux/plugins/tpm/bin/install_plugins
    ```
 
 ### Update Existing
