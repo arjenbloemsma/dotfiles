@@ -2,5 +2,4 @@ tmux/.config/tmux/plugins
 .DS_Store
 git/.config/git/config.local
 lazygit/.config/lazygit/state.yml
-nvim/.config/nvim/lazy-lock.json
 nvim/.config/nvim/bak/

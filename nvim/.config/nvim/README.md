@@ -21,6 +21,22 @@ cd ~/dotfiles
 stow nvim
 ```
 
+On first `nvim` launch, all packages auto-install via Lazy and Mason.
+
+## Package Management
+
+### Lazy Plugins
+- `lazy-lock.json` - locks exact plugin versions
+- Tracked in git for reproducible installs across machines
+
+### Mason Tools (LSPs, formatters, linters)
+- **LazyVim extras auto-handle most tools** - enabled extras in `lazyvim.json` automatically install required Mason packages via `ensure_installed`
+- **Additional tools** not covered by extras are in `lua/plugins/mason.lua`
+  - `prettier` - used by conform for markdown (lang.markdown extra configures but doesn't auto-install)
+  - `bicep-lsp` - Azure Bicep LSP
+
+Everything auto-installs on new machine via LazyVim/Mason `ensure_installed`.
+
 ## Resources
 
 - [LazyVim Docs](https://lazyvim.org)
