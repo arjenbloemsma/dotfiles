@@ -26,12 +26,59 @@ PACKAGES=(
     "lazygit"
     "ghostty"
     "starship"
+    "nvim"
     "tmux"
     "yabai"
     "skhd"
     "yazi"
     "gh"
+    "claude"
 )
+
+# Get app name for package on specific OS
+get_app_name() {
+    local package="$1"
+    local os="$2"
+
+    case "$os" in
+        macos)
+            case "$package" in
+                nvim) echo "neovim" ;;
+                bat) echo "bat" ;;
+                neofetch) echo "neofetch" ;;
+                lazygit) echo "lazygit" ;;
+                ghostty) echo "--cask ghostty" ;;
+                starship) echo "starship" ;;
+                tmux) echo "tmux" ;;
+                yabai) echo "koekeishiya/formulae/yabai" ;;
+                skhd) echo "koekeishiya/formulae/skhd" ;;
+                yazi) echo "yazi" ;;
+                gh) echo "gh" ;;
+            esac
+            ;;
+        ubuntu|debian)
+            case "$package" in
+                nvim) echo "neovim" ;;
+                bat) echo "bat" ;;
+                neofetch) echo "neofetch" ;;
+                tmux) echo "tmux" ;;
+                gh) echo "gh" ;;
+            esac
+            ;;
+        arch|manjaro)
+            case "$package" in
+                nvim) echo "neovim" ;;
+                bat) echo "bat" ;;
+                neofetch) echo "neofetch" ;;
+                lazygit) echo "lazygit" ;;
+                starship) echo "starship" ;;
+                tmux) echo "tmux" ;;
+                yazi) echo "yazi" ;;
+                gh) echo "github-cli" ;;
+            esac
+            ;;
+    esac
+}
 
 # Execute or dry-run a command
 execute() {
@@ -57,6 +104,18 @@ print_action() {
     fi
 }
 
+# Detect OS
+detect_os() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macos"
+    elif [[ -f /etc/os-release ]]; then
+        . /etc/os-release
+        echo "${ID,,}"
+    else
+        echo "unknown"
+    fi
+}
+
 # Check prerequisites
 check_prerequisites() {
     echo "Checking prerequisites..."
@@ -69,6 +128,61 @@ check_prerequisites() {
 
     command -v brew >/dev/null 2>&1 || echo -e "${YELLOW}⚠${NC} homebrew not installed"
 
+    echo ""
+}
+
+# Install applications
+install_applications() {
+    local os=$(detect_os)
+    local -a apps_to_install=()
+    local app_name
+
+    echo "Installing applications for $os..."
+
+    # Build list of apps to install
+    for package in "${PACKAGES[@]}"; do
+        app_name=$(get_app_name "$package" "$os")
+        [[ -n "$app_name" ]] && apps_to_install+=("$app_name")
+    done
+
+    # Skip if no apps to install
+    if [[ ${#apps_to_install[@]} -eq 0 ]]; then
+        echo -e "${YELLOW}⚠${NC} No apps to install"
+        echo ""
+        return
+    fi
+
+    # Show what would be installed in dry-run
+    if [[ "$DRY_RUN" == true ]]; then
+        echo -e "${BLUE}→${NC} Would install: ${apps_to_install[*]}"
+        echo ""
+        return
+    fi
+
+    # Install based on OS
+    case "$os" in
+        macos)
+            if command -v brew >/dev/null 2>&1; then
+                brew install "${apps_to_install[@]}"
+            else
+                echo -e "${YELLOW}⚠${NC} Homebrew not found, skipping"
+                return
+            fi
+            ;;
+        ubuntu|debian)
+            sudo apt update
+            sudo apt install -y "${apps_to_install[@]}"
+            ;;
+        arch|manjaro)
+            sudo pacman -S --noconfirm "${apps_to_install[@]}"
+            ;;
+        *)
+            echo -e "${YELLOW}⚠${NC} Unknown OS, skipping"
+            return
+            ;;
+    esac
+
+    echo -e "${GREEN}✓${NC} Applications installed"
     echo ""
 }
 
@@ -334,6 +448,7 @@ main() {
 
     # Run installation steps
     check_prerequisites
+    install_applications
     setup_git_config
     check_all_conflicts
     install_packages

@@ -27,14 +27,14 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 Run bootstrap script (installs prerequisites, clones repo, runs install):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/main/bootstrap.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/bootstrap.sh)
 ```
 
 Or manually:
 
 ```bash
 # Download bootstrap script
-curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/main/bootstrap.sh -o bootstrap.sh
+curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/bootstrap.sh -o bootstrap.sh
 chmod +x bootstrap.sh
 ./bootstrap.sh
 ```
