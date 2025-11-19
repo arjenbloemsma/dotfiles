@@ -58,7 +58,7 @@ get_app_name() {
             ;;
         ubuntu|debian)
             case "$package" in
-                nvim) echo "nvim" ;;
+                nvim) echo "neovim" ;;
                 bat) echo "bat" ;;
                 neofetch) echo "neofetch" ;;
                 lazygit) echo "lazygit" ;;
@@ -126,10 +126,12 @@ check_prerequisites() {
     command -v git >/dev/null 2>&1 || { echo -e "${RED}✗${NC} git not installed"; exit 1; }
     echo -e "${GREEN}✓${NC} git"
 
-    command -v stow >/dev/null 2>&1 || { echo -e "${RED}✗${NC} stow not installed. Install with: brew install stow"; exit 1; }
+    command -v stow >/dev/null 2>&1 || { echo -e "${RED}✗${NC} stow not installed"; exit 1; }
     echo -e "${GREEN}✓${NC} stow"
 
-    command -v brew >/dev/null 2>&1 || echo -e "${YELLOW}⚠${NC} homebrew not installed"
+    if command -v brew >/dev/null 2>&1; then
+        echo -e "${GREEN}✓${NC} homebrew"
+    fi
 
     echo ""
 }
@@ -164,18 +166,13 @@ install_applications() {
 
     # Install based on OS
     case "$os" in
-        macos)
+        macos|ubuntu|debian)
             if command -v brew >/dev/null 2>&1; then
                 brew install "${apps_to_install[@]}"
             else
                 echo -e "${YELLOW}⚠${NC} Homebrew not found, skipping"
                 return
             fi
-            ;;
-        ubuntu|debian)
-            for app in "${apps_to_install[@]}"; do
-                sudo snap install "$app" --classic 2>/dev/null || sudo snap install "$app"
-            done
             ;;
         arch|manjaro)
             sudo pacman -S --noconfirm "${apps_to_install[@]}"
@@ -436,6 +433,14 @@ main() {
     # Handle rollback mode
     if [[ -n "$ROLLBACK_TIMESTAMP" ]]; then
         rollback
+    fi
+
+    # Setup Homebrew environment for Linux (must be in main scope)
+    local os=$(detect_os)
+    if [[ "$os" == "ubuntu" ]] || [[ "$os" == "debian" ]]; then
+        if [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        fi
     fi
 
     # Print header

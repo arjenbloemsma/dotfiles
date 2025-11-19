@@ -42,8 +42,19 @@ install_prerequisites() {
             brew install git stow
             ;;
         ubuntu|debian)
+            # Install build essentials and curl for Homebrew
             sudo apt update
-            sudo apt install -y git stow
+            sudo apt install -y build-essential curl git
+
+            if ! command -v brew >/dev/null 2>&1; then
+                echo -e "${YELLOW}→${NC} Installing Homebrew..."
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+                # Add Homebrew to PATH
+                echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> "$HOME/.profile"
+                eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            fi
+            brew install stow
             ;;
         arch|manjaro)
             sudo pacman -S --noconfirm git stow
