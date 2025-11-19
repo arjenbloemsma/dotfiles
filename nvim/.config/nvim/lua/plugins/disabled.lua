@@ -30,4 +30,24 @@ return {
     "akinsho/bufferline.nvim",
     enabled = false,
   },
+
+  -- ============================================================================
+  -- RENDER-MARKDOWN.NVIM - Conceals TODO indicators
+  -- ============================================================================
+  -- This plugin sets conceallevel and conceals markdown syntax including
+  -- TODO indicators like [ ], [X], [!], [>], [~] which breaks daily workflow
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    enabled = false,
+  },
+
+  -- ============================================================================
+  -- MINI.PAIRS - Auto-pairing of quotes, brackets, braces
+  -- ============================================================================
+  -- Automatically creates closing pairs for quotes, brackets, braces
+  -- Disabled as it interferes with Vi typing workflow
+  {
+    "nvim-mini/mini.pairs",
+    enabled = false,
+  },
 }

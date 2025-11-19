@@ -82,23 +82,95 @@ This document tracks all customizations made to the LazyVim starter config and r
 
 ---
 
+### 6. Conform.nvim (`conform.lua`)
+**Why**: Code formatting with prettier
+**Formatters**:
+- Markdown: prettier
+
+**Status**: ✅ Working
+
+---
+
+### 7. Lualine (`lualine.lua`)
+**Why**: Simplified statusline for tmux workflow
+**Customizations**:
+- Removed current directory (redundant with tmux)
+- Kept: diagnostics, filename (relative path), filetype, location, encoding
+- Clean inactive sections
+
+**Status**: ✅ Working
+
+---
+
+## Plugins Disabled (`lua/plugins/disabled.lua`)
+
+### 1. Snacks Explorer & Dashboard
+**Why**:
+- Dashboard not needed
+- Explorer disabled in favor of dual file browsing approach:
+  - **Neo-tree**: Classic left sidebar navigation
+  - **Mini.files**: Miller columns view (like macOS Finder)
+
+**Keymaps unmapped**: `<leader>e`, `<leader>E`
+
+### 2. Bufferline
+**Why**: Tab bar at top not needed, prefer buffer list
+
+### 3. Render-Markdown
+**Why**: Sets conceallevel which hides TODO indicators like `[ ]`, `[X]`, breaks workflow
+
+### 4. Mini.Pairs
+**Why**: Auto-pairing of quotes/brackets/braces interferes with Vi typing flow
+**Date disabled**: 2025-11-19
+
+---
+
 ## Custom Options (`lua/config/options.lua`)
 
 Settings that override LazyVim defaults:
 
 ```lua
-opt.mouse = ""           -- Disable mouse (keyboard-only workflow)
-opt.scrolloff = 5        -- Keep 5 lines context above/below cursor
-opt.colorcolumn = "80"   -- Visual guide at column 80
-opt.wrap = false         -- No line wrapping
-opt.showtabline = 0      -- Hide tabline completely
-opt.tabstop = 2          -- 2-space indentation
-opt.shiftwidth = 2       -- 2-space indentation
-opt.expandtab = true     -- Expand tabs to spaces
-opt.autoindent = true    -- Copy indent from current line
+vim.g.loaded_netrw = 1           -- Disable netrw (using neo-tree)
+vim.g.loaded_netrwPlugin = 1     -- Disable netrw plugin
+opt.mouse = ""                   -- Disable mouse (keyboard-only workflow)
+opt.swapfile = false             -- No swap files
+opt.scrolloff = 5                -- Keep 5 lines context above/below cursor
+opt.colorcolumn = "80"           -- Visual guide at column 80
+opt.wrap = false                 -- No line wrapping
+opt.tabstop = 2                  -- 2-space indentation
+opt.shiftwidth = 2               -- 2-space indentation
+opt.expandtab = true             -- Expand tabs to spaces
+opt.autoindent = true            -- Copy indent from current line
+vim.g.snacks_animate = false     -- Disable snacks animations
+vim.o.autoread = true            -- Auto-reload files modified externally
 ```
 
 **Why**: Personal coding preferences, consistency with prettier defaults
+
+---
+
+## Custom Auto-commands (`lua/config/autocmds.lua`)
+
+```lua
+-- Auto-reload files when modified externally
+vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI", "FocusGained" }, {
+  command = "if mode() != 'c' | checktime | endif",
+  pattern = "*",
+  group = vim.api.nvim_create_augroup("auto-read", { clear = true }),
+})
+
+-- Set correct filetype for .env files (prevents shell LSP warnings)
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+  pattern = { ".env", ".env.*" },
+  callback = function()
+    vim.bo.filetype = "dotenv"
+  end,
+})
+```
+
+**Why**:
+- Auto-reload prevents stale file issues when switching branches
+- Dotenv filetype prevents bashls from analyzing .env files as shell scripts
 
 ---
 
@@ -226,23 +298,29 @@ Use this to evaluate future customizations:
 | Obsidian | ✅ | ❌ | ✅ Added | High |
 | LazyGit | ✅ | ❌ | ✅ Added | High |
 | Harpoon | ✅ | Extra | ✅ Added | High |
-| ChatGPT | ✅ | ❌ | 🔲 Pending | Low |
 | Tmux nav | ✅ | ❌ | 🔲 Pending | High |
 | Telescope | ✅ | fzf-lua | ✅ Skip | N/A |
-| jk->ESC | ✅ | ❌ | 🔲 Pending | Medium |
-| Auto-save | ✅ | ❌ | 🔲 Pending | Low |
+| ChatGPT | ✅ | ❌ | ✅ Skip | N/A (Claude Code) |
+| Custom keymaps | ✅ | ✅ | ✅ Skip | N/A (LazyVim defaults) |
+| Swap files | ✅ | ❌ | ✅ Added | High |
+| Auto-reload | ✅ | ❌ | ✅ Added | High |
+| Prettier | ❌ | ❌ | ✅ Added | High |
 
 ---
 
 ## Next Steps
 
 1. ✅ Basic setup complete
-2. ⏳ Evaluate Obsidian issues
-3. 🔲 Decide on missing keymaps
-4. 🔲 Add vim-tmux-navigator if needed
-5. 🔲 Test workflow for a week
-6. 🔲 Add ChatGPT if still needed
-7. 🔲 Clean up old config backups
+2. ✅ Disabled swap files (2024-11-17)
+3. ✅ Disabled netrw (2024-11-17)
+4. ✅ Added auto-reload files (2024-11-17)
+5. ✅ Configured prettier for markdown (2024-11-17)
+6. ✅ Using LazyVim default keymaps (no custom keymaps needed)
+7. ⏳ **Phase out Obsidian.nvim** (likely replacing with different note-taking approach)
+8. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
+9. 🔲 Add vim-tmux-navigator if needed
+10. 🔲 Test workflow for a week
+11. 🔲 Clean up old config backups
 
 ---
 

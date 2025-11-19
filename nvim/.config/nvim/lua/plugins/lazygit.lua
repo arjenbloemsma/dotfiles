@@ -1,16 +1,16 @@
+-- Lazygit integration via snacks.nvim
+-- Automatically configures lazygit colorscheme to match nvim theme
 return {
-  "kdheepak/lazygit.nvim",
-  cmd = {
-    "LazyGit",
-    "LazyGitConfig",
-    "LazyGitCurrentFile",
-    "LazyGitFilter",
-    "LazyGitFilterCurrentFile",
-  },
-  dependencies = {
-    "nvim-lua/plenary.nvim",
-  },
-  keys = {
-    { "<leader>lg", "<cmd>LazyGit<cr>", desc = "Open LazyGit" },
+  {
+    "folke/snacks.nvim",
+    opts = {
+      lazygit = {
+        enabled = true,
+        configure = true, -- Auto-configure lazygit to match nvim colorscheme
+      },
+    },
+    keys = {
+      { "<leader>lg", function() Snacks.lazygit() end, desc = "Lazygit" },
+    },
   },
 }
