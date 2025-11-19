@@ -77,3 +77,6 @@ function yy() {
 fastfetch
 
 export PATH="/opt/homebrew/opt/curl/bin:$PATH"
+
+# Source local overrides (OS-specific configs)
+[[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.local" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.local"
