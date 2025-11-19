@@ -1,6 +1,10 @@
 # Use Vi style editing
 set -o vi
 
+# Default editor
+export EDITOR="nvim"
+export VISUAL="nvim"
+
 # Starship config in XDG_CONFIG_HOME
 export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
 
