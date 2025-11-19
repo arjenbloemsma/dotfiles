@@ -58,10 +58,13 @@ get_app_name() {
             ;;
         ubuntu|debian)
             case "$package" in
-                nvim) echo "neovim" ;;
+                nvim) echo "nvim" ;;
                 bat) echo "bat" ;;
                 neofetch) echo "neofetch" ;;
+                lazygit) echo "lazygit" ;;
+                starship) echo "starship" ;;
                 tmux) echo "tmux" ;;
+                yazi) echo "yazi" ;;
                 gh) echo "gh" ;;
             esac
             ;;
@@ -170,8 +173,9 @@ install_applications() {
             fi
             ;;
         ubuntu|debian)
-            sudo apt update
-            sudo apt install -y "${apps_to_install[@]}"
+            for app in "${apps_to_install[@]}"; do
+                sudo snap install "$app" --classic 2>/dev/null || sudo snap install "$app"
+            done
             ;;
         arch|manjaro)
             sudo pacman -S --noconfirm "${apps_to_install[@]}"
