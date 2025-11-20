@@ -331,33 +331,6 @@ install_packages() {
     echo ""
 }
 
-# Setup OS-specific configs
-setup_os_configs() {
-    local os=$(detect_os)
-
-    echo "Setting up OS-specific configs..."
-
-    if [[ "$os" == "ubuntu" ]] || [[ "$os" == "debian" ]]; then
-        local zshrc_local="$HOME/.config/zsh/.zshrc.local"
-
-        if [[ ! -f "$zshrc_local" ]]; then
-            cat > "$zshrc_local" << 'EOF'
-# Ubuntu/Debian specific configs
-
-# Homebrew
-if [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi
-EOF
-            echo -e "${GREEN}✓${NC} Created zshrc.local for Linux"
-        else
-            echo -e "${GREEN}✓${NC} zshrc.local already exists"
-        fi
-    fi
-
-    echo ""
-}
-
 # Check tmux plugins
 check_tmux_plugins() {
     if [[ "$DRY_RUN" == true ]]; then
@@ -486,7 +459,6 @@ main() {
     check_prerequisites
     install_applications
     setup_git_config
-    setup_os_configs
     check_all_conflicts
     install_packages
     check_tmux_plugins

@@ -3,7 +3,6 @@ tmux/.config/tmux/plugins
 git/.config/git/config.local
 lazygit/.config/lazygit/state.yml
 nvim/.config/nvim/bak/
-zsh/.config/zsh/.zshrc.local
 
 # Claude Code runtime files
 claude/.claude/debug/

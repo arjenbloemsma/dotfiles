@@ -35,16 +35,6 @@ alias gsm='git stash push -m'
 alias gress='git reset --soft HEAD~1'
 alias gresh='git reset --hard'
 
-alias firefox='/Applications/Firefox.app/Contents/MacOS/firefox -P'
-
-# pnpm
-export PNPM_HOME="~/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
-
 # bloem, my swiss army knife
 source "$XDG_CONFIG_HOME/bloem/bloem"
 
@@ -76,7 +66,17 @@ function yy() {
 # Fastfetch for the fancy system info
 fastfetch
 
-export PATH="/opt/homebrew/opt/curl/bin:$PATH"
-
-# Source local overrides (OS-specific configs)
-[[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.local" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.local"
+# Source OS-specific configs
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.macos" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.macos"
+elif [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+    case "${ID,,}" in
+        ubuntu)
+            [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.ubuntu" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.ubuntu"
+            ;;
+        arch)
+            [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.arch" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.arch"
+            ;;
+    esac
+fi
