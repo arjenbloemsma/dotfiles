@@ -347,8 +347,8 @@ install_packages() {
     echo ""
 }
 
-# Check tmux plugins
-check_tmux_plugins() {
+# Install tmux plugin manager
+install_tmux_plugins() {
     if [[ "$DRY_RUN" == true ]]; then
         return
     fi
@@ -358,7 +358,10 @@ check_tmux_plugins() {
     if [[ -d "$HOME/.config/tmux/plugins/tpm" ]]; then
         echo -e "${GREEN}✓${NC} TPM already installed"
     else
-        echo -e "${YELLOW}→${NC} Install tmux plugins by pressing prefix + I in tmux"
+        echo -e "${YELLOW}→${NC} Installing TPM..."
+        git clone https://github.com/tmux-plugins/tpm "$HOME/.config/tmux/plugins/tpm"
+        echo -e "${GREEN}✓${NC} TPM installed"
+        echo -e "${YELLOW}→${NC} Run prefix + I in tmux to install plugins"
     fi
 
     echo ""
@@ -477,7 +480,7 @@ main() {
     setup_git_config
     check_all_conflicts
     install_packages
-    check_tmux_plugins
+    install_tmux_plugins
     print_completion
 }
 
