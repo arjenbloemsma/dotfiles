@@ -1,5 +1,5 @@
 return {
-  "williamboman/mason.nvim",
+  "mason-org/mason.nvim",
   opts = {
     ensure_installed = {
       "prettier", -- used by conform for markdown (lang.markdown configures but doesn't install)
