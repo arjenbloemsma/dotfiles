@@ -21,7 +21,7 @@ check_and_load() {
 }
 
 # Node version manager
-check_and_load "fnm" 'fnm env --use-on-cd'
+check_and_load "fnm" 'eval "$(fnm env --use-on-cd)"'
 
 # Aliases
 alias vi='nvim'
@@ -48,10 +48,10 @@ alias gress='git reset --soft HEAD~1'
 alias gresh='git reset --hard'
 
 # Starship, the cross-shell prompt
-check_and_load "starship" 'starship init zsh'
+check_and_load "starship" 'eval "$(starship init zsh)"'
 
 # Zoxide, a smarter cd
-check_and_load "zoxide" 'zoxide init --cmd cd zsh'
+check_and_load "zoxide" 'eval "$(zoxide init --cmd cd zsh)"'
 
 # Fuzzy find
 check_and_load "fzf" 'source <(fzf --zsh)'
