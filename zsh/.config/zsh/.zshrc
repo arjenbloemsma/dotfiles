@@ -8,8 +8,20 @@ export VISUAL="nvim"
 # Starship config in XDG_CONFIG_HOME
 export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
 
+# Helper function to check and load tools
+check_and_load() {
+    local cmd="$1"
+    local init_cmd="$2"
+
+    if command -v "$cmd" >/dev/null 2>&1; then
+        eval "$init_cmd"
+    else
+        echo "⚠️  $cmd not found - skipping initialization"
+    fi
+}
+
 # Node version manager
-eval "$(fnm env --use-on-cd)"
+check_and_load "fnm" 'fnm env --use-on-cd'
 
 # Aliases
 alias vi='nvim'
@@ -35,23 +47,20 @@ alias gsm='git stash push -m'
 alias gress='git reset --soft HEAD~1'
 alias gresh='git reset --hard'
 
-# bloem, my swiss army knife
-source "$XDG_CONFIG_HOME/bloem/bloem"
-
 # Starship, the cross-shell prompt
-eval "$(starship init zsh)"
+check_and_load "starship" 'starship init zsh'
 
 # Zoxide, a smarter cd
-eval "$(zoxide init --cmd cd zsh)"
+check_and_load "zoxide" 'zoxide init --cmd cd zsh'
 
 # Fuzzy find
-source <(fzf --zsh)
+check_and_load "fzf" 'source <(fzf --zsh)'
 HISTFILE=~/.zsh_history
 # Increase history size and setopt to `appendhistory`
 # which is needed for Fuzzy find
 HISTSIZE=20000
 SAVEHIST=20000
-setopt appendhistory
+setopt appendhistory 2>/dev/null || true
 
 # Yazi is a fast terminal file manager
 function yy() {
@@ -64,7 +73,7 @@ function yy() {
 }
 
 # Fastfetch for the fancy system info
-fastfetch
+check_and_load "fastfetch" 'fastfetch'
 
 # Source OS-specific configs
 if [[ "$OSTYPE" == "darwin"* ]]; then

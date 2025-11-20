@@ -33,6 +33,10 @@ PACKAGES=(
     "yazi"
     "gh"
     "claude"
+    "fnm"
+    "zoxide"
+    "fzf"
+    "fastfetch"
 )
 
 # Get app name for package on specific OS
@@ -54,6 +58,10 @@ get_app_name() {
                 skhd) echo "koekeishiya/formulae/skhd" ;;
                 yazi) echo "yazi" ;;
                 gh) echo "gh" ;;
+                fnm) echo "fnm" ;;
+                zoxide) echo "zoxide" ;;
+                fzf) echo "fzf" ;;
+                fastfetch) echo "fastfetch" ;;
             esac
             ;;
         ubuntu|debian)
@@ -66,6 +74,10 @@ get_app_name() {
                 tmux) echo "tmux" ;;
                 yazi) echo "yazi" ;;
                 gh) echo "gh" ;;
+                fnm) echo "fnm" ;;
+                zoxide) echo "zoxide" ;;
+                fzf) echo "fzf" ;;
+                fastfetch) echo "fastfetch" ;;
             esac
             ;;
         arch|manjaro)
@@ -78,6 +90,10 @@ get_app_name() {
                 tmux) echo "tmux" ;;
                 yazi) echo "yazi" ;;
                 gh) echo "github-cli" ;;
+                fnm) echo "fnm" ;;
+                zoxide) echo "zoxide" ;;
+                fzf) echo "fzf" ;;
+                fastfetch) echo "fastfetch" ;;
             esac
             ;;
     esac
