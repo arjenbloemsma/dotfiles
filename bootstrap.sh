@@ -56,12 +56,24 @@ install_prerequisites() {
             fi
             brew install stow
             ;;
-        arch|manjaro)
-            sudo pacman -S --noconfirm git stow
+        arch)
+            # Install base packages with pacman
+            sudo pacman -S --noconfirm git stow base-devel
+
+            # Install yay if not present
+            if ! command -v yay >/dev/null 2>&1; then
+                echo -e "${YELLOW}→${NC} Installing yay..."
+                git clone https://aur.archlinux.org/yay.git /tmp/yay
+                cd /tmp/yay
+                makepkg -si --noconfirm
+                cd -
+                rm -rf /tmp/yay
+                echo -e "${GREEN}✓${NC} yay installed"
+            fi
             ;;
         *)
             echo -e "${RED}✗${NC} Unsupported OS: $os"
-            echo "Supported: macOS, Ubuntu/Debian, Arch/Manjaro"
+            echo "Supported: macOS, Ubuntu, Arch"
             exit 1
             ;;
     esac
@@ -92,25 +104,74 @@ check_ssh_key() {
     echo ""
 }
 
-# Clone dotfiles repo
+# Clone or update dotfiles repo
 clone_dotfiles() {
-    if [[ -d "$DOTFILES_DIR" ]]; then
-        echo -e "${GREEN}✓${NC} Dotfiles already cloned at $DOTFILES_DIR"
-        return
+    if [[ -d "$DOTFILES_DIR/.git" ]]; then
+        echo "Updating dotfiles..."
+        cd "$DOTFILES_DIR"
+        git pull
+        echo -e "${GREEN}✓${NC} Dotfiles updated"
+        cd -
+    else
+        echo "Cloning dotfiles..."
+        if ! git clone "$DOTFILES_REPO" "$DOTFILES_DIR" 2>/dev/null; then
+            echo -e "${RED}✗${NC} Failed to clone with SSH"
+            echo ""
+            echo "Trying HTTPS fallback..."
+            HTTPS_REPO="https://github.com/arjenbloemsma/dotfiles.git"
+            git clone "$HTTPS_REPO" "$DOTFILES_DIR"
+            echo -e "${YELLOW}⚠${NC} Cloned via HTTPS - configure SSH for push access later"
+        fi
+        echo -e "${GREEN}✓${NC} Dotfiles cloned"
     fi
 
-    echo "Cloning dotfiles..."
+    echo ""
+}
 
-    if ! git clone "$DOTFILES_REPO" "$DOTFILES_DIR" 2>/dev/null; then
-        echo -e "${RED}✗${NC} Failed to clone with SSH"
-        echo ""
-        echo "Trying HTTPS fallback..."
-        HTTPS_REPO="https://github.com/arjenbloemsma/dotfiles.git"
-        git clone "$HTTPS_REPO" "$DOTFILES_DIR"
-        echo -e "${YELLOW}⚠${NC} Cloned via HTTPS - configure SSH for push access later"
+# Setup zsh as default shell
+setup_zsh() {
+    local os=$(detect_os)
+
+    echo "Setting up zsh..."
+
+    # Install zsh if not present
+    if ! command -v zsh >/dev/null 2>&1; then
+        case "$os" in
+            macos)
+                brew install zsh
+                ;;
+            ubuntu|debian)
+                sudo apt install -y zsh
+                ;;
+            arch)
+                yay -S --noconfirm zsh
+                ;;
+        esac
+        echo -e "${GREEN}✓${NC} zsh installed"
+    else
+        echo -e "${GREEN}✓${NC} zsh already installed"
     fi
 
-    echo -e "${GREEN}✓${NC} Dotfiles cloned"
+    # Set zsh as default shell if not already
+    if [[ "$SHELL" != *"zsh"* ]]; then
+        local zsh_path=$(which zsh)
+        echo -e "${YELLOW}→${NC} Changing default shell to zsh..."
+        chsh -s "$zsh_path"
+        echo -e "${GREEN}✓${NC} Default shell changed to zsh"
+        echo -e "${YELLOW}→${NC} Log out and back in for shell change to take effect"
+    else
+        echo -e "${GREEN}✓${NC} zsh already default shell"
+    fi
+
+    # Setup XDG_CONFIG_HOME in .zshenv
+    if [[ ! -f "$HOME/.zshenv" ]] || ! grep -q "XDG_CONFIG_HOME" "$HOME/.zshenv" 2>/dev/null; then
+        echo -e "${YELLOW}→${NC} Setting up XDG_CONFIG_HOME in ~/.zshenv..."
+        echo 'export XDG_CONFIG_HOME="$HOME/.config"' >> "$HOME/.zshenv"
+        echo -e "${GREEN}✓${NC} XDG_CONFIG_HOME configured"
+    else
+        echo -e "${GREEN}✓${NC} XDG_CONFIG_HOME already configured"
+    fi
+
     echo ""
 }
 
@@ -134,6 +195,7 @@ main() {
     echo ""
 
     install_prerequisites
+    setup_zsh
     check_ssh_key
     clone_dotfiles
     run_install "$@"
@@ -143,7 +205,7 @@ main() {
     echo ""
     echo "Next steps:"
     echo "  1. Configure git: edit ~/.config/git/config.local"
-    echo "  2. Restart shell: exec \$SHELL"
+    echo "  2. Log out and back in for shell changes to take effect"
 }
 
 main "$@"

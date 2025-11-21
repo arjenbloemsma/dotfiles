@@ -18,7 +18,8 @@ DRY_RUN=false
 VERBOSE=false
 ROLLBACK_TIMESTAMP=""
 
-PACKAGES=(
+# Packages with config directories to stow
+STOW_PACKAGES=(
     "git"
     "zsh"
     "bat"
@@ -33,11 +34,18 @@ PACKAGES=(
     "yazi"
     "gh"
     "claude"
+)
+
+# Tools to install but not stow (no config files)
+INSTALL_ONLY=(
     "fnm"
     "zoxide"
     "fzf"
     "fastfetch"
 )
+
+# All packages to install
+PACKAGES=("${STOW_PACKAGES[@]}" "${INSTALL_ONLY[@]}")
 
 # Get app name for package on specific OS
 get_app_name() {
@@ -80,7 +88,7 @@ get_app_name() {
                 fastfetch) echo "fastfetch" ;;
             esac
             ;;
-        arch|manjaro)
+        arch)
             case "$package" in
                 nvim) echo "neovim" ;;
                 bat) echo "bat" ;;
@@ -190,8 +198,8 @@ install_applications() {
                 return
             fi
             ;;
-        arch|manjaro)
-            sudo pacman -S --noconfirm "${apps_to_install[@]}"
+        arch)
+            yay -S --noconfirm "${apps_to_install[@]}"
             ;;
         *)
             echo -e "${YELLOW}⚠${NC} Unknown OS, skipping"
@@ -340,7 +348,7 @@ install_packages() {
     echo "Installing packages..."
     cd "$DOTFILES_DIR"
 
-    for package in "${PACKAGES[@]}"; do
+    for package in "${STOW_PACKAGES[@]}"; do
         install_package "$package"
     done
 
