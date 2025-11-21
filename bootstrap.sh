@@ -163,13 +163,25 @@ setup_zsh() {
         echo -e "${GREEN}✓${NC} zsh already default shell"
     fi
 
-    # Setup XDG_CONFIG_HOME in .zshenv
-    if [[ ! -f "$HOME/.zshenv" ]] || ! grep -q "XDG_CONFIG_HOME" "$HOME/.zshenv" 2>/dev/null; then
-        echo -e "${YELLOW}→${NC} Setting up XDG_CONFIG_HOME in ~/.zshenv..."
-        echo 'export XDG_CONFIG_HOME="$HOME/.config"' >> "$HOME/.zshenv"
-        echo -e "${GREEN}✓${NC} XDG_CONFIG_HOME configured"
+    # Setup XDG_CONFIG_HOME and ZDOTDIR in .zshenv
+    if [[ ! -f "$HOME/.zshenv" ]]; then
+        echo -e "${YELLOW}→${NC} Creating ~/.zshenv..."
+        cat > "$HOME/.zshenv" << 'EOF'
+export XDG_CONFIG_HOME="$HOME/.config"
+export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
+EOF
+        echo -e "${GREEN}✓${NC} XDG_CONFIG_HOME and ZDOTDIR configured"
     else
-        echo -e "${GREEN}✓${NC} XDG_CONFIG_HOME already configured"
+        # Update existing .zshenv if needed
+        if ! grep -q "XDG_CONFIG_HOME" "$HOME/.zshenv" 2>/dev/null; then
+            echo 'export XDG_CONFIG_HOME="$HOME/.config"' >> "$HOME/.zshenv"
+        fi
+        if ! grep -q "ZDOTDIR" "$HOME/.zshenv" 2>/dev/null; then
+            echo 'export ZDOTDIR="$XDG_CONFIG_HOME/zsh"' >> "$HOME/.zshenv"
+            echo -e "${GREEN}✓${NC} ZDOTDIR configured"
+        else
+            echo -e "${GREEN}✓${NC} XDG_CONFIG_HOME and ZDOTDIR already configured"
+        fi
     fi
 
     echo ""
