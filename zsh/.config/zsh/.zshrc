@@ -8,6 +8,21 @@ export VISUAL="nvim"
 # Starship config in XDG_CONFIG_HOME
 export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
 
+# Source OS-specific configs FIRST (sets up PATH for Homebrew, etc)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.macos" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.macos"
+elif [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+    case "${ID:l}" in
+        ubuntu)
+            [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.ubuntu" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.ubuntu"
+            ;;
+        arch)
+            [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.arch" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.arch"
+            ;;
+    esac
+fi
+
 # Helper function to check and load tools
 check_and_load() {
     local cmd="$1"
@@ -74,18 +89,3 @@ function yy() {
 
 # Fastfetch for the fancy system info
 check_and_load "fastfetch" 'fastfetch'
-
-# Source OS-specific configs
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.macos" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.macos"
-elif [[ -f /etc/os-release ]]; then
-    . /etc/os-release
-    case "${ID:l}" in
-        ubuntu)
-            [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.ubuntu" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.ubuntu"
-            ;;
-        arch)
-            [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.arch" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.arch"
-            ;;
-    esac
-fi
