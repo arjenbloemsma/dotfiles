@@ -80,7 +80,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.macos" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.macos"
 elif [[ -f /etc/os-release ]]; then
     . /etc/os-release
-    case "${ID,,}" in
+    case "${ID:l}" in
         ubuntu)
             [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.ubuntu" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.ubuntu"
             ;;
