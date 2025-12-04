@@ -59,7 +59,8 @@ built-in Snacks.zen which provides same functionality with better integration.
 - `<leader>od` - Toggle checkbox (buffer mapping)
 
 **Dependencies**: Uses fzf-lua for pickers (LazyVim default)
-**Status**: ⚠️ Some issues reported (to be investigated)
+**Note**: nvim-cmp integration disabled (using blink.cmp instead)
+**Status**: ⚠️ Phasing out - migrating to custom keymaps
 
 ---
 
@@ -177,6 +178,17 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 
 ---
 
+## Custom Keymaps (`lua/config/keymaps.lua`)
+
+```lua
+-- Toggle markdown todo checkbox (- [ ] <-> - [x])
+vim.keymap.set("n", "<leader>td", toggle_checkbox, { desc = "Toggle todo checkbox" })
+```
+
+**Why**: Replaces obsidian.nvim checkbox toggle, works without plugin dependency
+
+---
+
 ## What LazyVim Already Provides
 
 These were in old config but **not needed** - LazyVim includes them:
@@ -275,10 +287,12 @@ From old config:
 ├── init.lua                    # LazyVim entry point
 ├── lua/
 │   ├── config/
-│   │   └── options.lua         # ✨ Custom options override
+│   │   ├── options.lua         # ✨ Custom options override
+│   │   ├── autocmds.lua        # ✨ Custom auto-commands
+│   │   └── keymaps.lua         # ✨ Custom keymaps
 │   └── plugins/
 │       ├── colorscheme.lua     # ✨ Catppuccin config
-│       ├── obsidian.lua        # ✨ Note-taking
+│       ├── obsidian.lua        # ✨ Note-taking (phasing out)
 │       ├── lazygit.lua         # ✨ Git UI
 │       └── example.lua         # LazyVim examples
 ├── CUSTOMIZATIONS.md           # This file
@@ -319,11 +333,13 @@ Use this to evaluate future customizations:
 5. ✅ Configured prettier for markdown (2024-11-17)
 6. ✅ Using LazyVim default keymaps (no custom keymaps needed)
 7. ✅ Removed no-neck-pain.nvim, using built-in Snacks.zen (2025-12-04)
-8. ⏳ **Phase out Obsidian.nvim** (likely replacing with different note-taking approach)
-9. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
-10. 🔲 Add vim-tmux-navigator if needed
-11. 🔲 Test workflow for a week
-12. 🔲 Clean up old config backups
+8. ✅ Disabled nvim-cmp integration in obsidian.nvim (2025-12-04)
+9. ✅ Added custom todo checkbox toggle `<leader>td` (2025-12-04)
+10. ⏳ **Phase out Obsidian.nvim** (migrating features to custom keymaps)
+11. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
+12. 🔲 Add vim-tmux-navigator if needed
+13. 🔲 Test workflow for a week
+14. ✅ Clean up old config backups (2025-12-04)
 
 ---
 
