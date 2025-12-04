@@ -24,13 +24,16 @@ This document tracks all customizations made to the LazyVim starter config and r
 
 ---
 
-### 2. No Neck Pain (`no-neck-pain.lua`)
+### 2. Zen Mode (built-in Snacks.nvim)
 **Why**: Ergonomic centered coding view, reduces eye strain
-**Keymap**: `<leader>uz` - Toggle zen mode
-**Config**: 120 character width
-**Status**: ✅ Working
+**Keymap**: `<leader>uz` - Toggle zen mode (LazyVim default)
+**Config**: 120 character width, dimmed backdrop
+**Status**: ✅ Using LazyVim built-in
 
-**Note**: Originally `<leader>nn` conflicted with LazyVim's `<leader>n` (notifications)
+**Note**: Previously used no-neck-pain.nvim, removed 2025-12-04 in favor of
+built-in Snacks.zen which provides same functionality with better integration.
+
+**Related**: `<leader>uZ` - Zoom mode (fullscreen current split, keeps statusline)
 
 ---
 
@@ -275,7 +278,6 @@ From old config:
 │   │   └── options.lua         # ✨ Custom options override
 │   └── plugins/
 │       ├── colorscheme.lua     # ✨ Catppuccin config
-│       ├── no-neck-pain.lua    # ✨ Zen mode
 │       ├── obsidian.lua        # ✨ Note-taking
 │       ├── lazygit.lua         # ✨ Git UI
 │       └── example.lua         # LazyVim examples
@@ -294,7 +296,7 @@ Use this to evaluate future customizations:
 | Feature | Old Config | LazyVim | Action | Priority |
 |---------|-----------|---------|--------|----------|
 | Catppuccin theme | ✅ | ❌ | ✅ Added | High |
-| No neck pain | ✅ | ❌ | ✅ Added | Medium |
+| Zen mode | ✅ | Snacks.zen | ✅ Using built-in | Medium |
 | Obsidian | ✅ | ❌ | ✅ Added | High |
 | LazyGit | ✅ | ❌ | ✅ Added | High |
 | Harpoon | ✅ | Extra | ✅ Added | High |
@@ -316,11 +318,12 @@ Use this to evaluate future customizations:
 4. ✅ Added auto-reload files (2024-11-17)
 5. ✅ Configured prettier for markdown (2024-11-17)
 6. ✅ Using LazyVim default keymaps (no custom keymaps needed)
-7. ⏳ **Phase out Obsidian.nvim** (likely replacing with different note-taking approach)
-8. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
-9. 🔲 Add vim-tmux-navigator if needed
-10. 🔲 Test workflow for a week
-11. 🔲 Clean up old config backups
+7. ✅ Removed no-neck-pain.nvim, using built-in Snacks.zen (2025-12-04)
+8. ⏳ **Phase out Obsidian.nvim** (likely replacing with different note-taking approach)
+9. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
+10. 🔲 Add vim-tmux-navigator if needed
+11. 🔲 Test workflow for a week
+12. 🔲 Clean up old config backups
 
 ---
 
