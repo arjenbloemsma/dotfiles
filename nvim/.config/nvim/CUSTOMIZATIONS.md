@@ -183,9 +183,11 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 ```lua
 -- Toggle markdown todo checkbox (- [ ] <-> - [x])
 vim.keymap.set("n", "<leader>td", toggle_checkbox, { desc = "Toggle todo checkbox" })
+vim.keymap.set("v", "<leader>td", toggle_checkbox_visual, { desc = "Toggle todo checkboxes" })
 ```
 
 **Why**: Replaces obsidian.nvim checkbox toggle, works without plugin dependency
+**Visual mode**: Select multiple lines, toggle all checkboxes at once
 
 ---
 
