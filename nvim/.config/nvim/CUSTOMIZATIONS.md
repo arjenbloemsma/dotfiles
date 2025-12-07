@@ -184,10 +184,20 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 -- Toggle markdown todo checkbox (- [ ] <-> - [x])
 vim.keymap.set("n", "<leader>td", toggle_checkbox, { desc = "Toggle todo checkbox" })
 vim.keymap.set("v", "<leader>td", toggle_checkbox_visual, { desc = "Toggle todo checkboxes" })
+
+-- Convert text to todo items
+vim.keymap.set("n", "<leader>tc", make_todo, { desc = "Convert to todo" })
+vim.keymap.set("v", "<leader>tc", make_todo_visual, { desc = "Convert lines to todos" })
 ```
 
-**Why**: Replaces obsidian.nvim checkbox toggle, works without plugin dependency
-**Visual mode**: Select multiple lines, toggle all checkboxes at once
+**Toggle (`<leader>td`)**: Replaces obsidian.nvim checkbox toggle, works without plugin dependency
+**Convert (`<leader>tc`)**: Converts plain text or list items to todos:
+- `- item` → `- [ ] item`
+- `* item` → `- [ ] * item`
+- `1. item` → `- [ ] 1. item`
+- `plain text` → `- [ ] plain text`
+
+**Visual mode**: Select multiple lines to toggle/convert all at once
 
 ---
 
