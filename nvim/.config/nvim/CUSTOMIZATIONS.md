@@ -39,32 +39,55 @@ built-in Snacks.zen which provides same functionality with better integration.
 
 ### 3. Obsidian.nvim (`obsidian.lua`)
 **Why**: Note-taking integration with Obsidian vault
-**Vault**: `~/Documents/notes-vault`
-**Features**:
-- Zettelkasten-style note IDs (timestamp-based)
-- Daily notes with templates
-- Wiki links and frontmatter management
-- Checkbox toggling
+**Status**: ⚠️ Phasing out - replaced by custom plugins
 
-**Keymaps**:
+Features migrated to:
+- **todo.lua** - Checkbox toggling (`<leader>td`, `<leader>tc`)
+- **daily-notes.lua** - Daily notes (`<leader>nt`, `<leader>ny`)
+- **custom-zettelkasten.lua** - Tag search (`<leader>zt`)
+
+Remaining features still using obsidian.nvim:
 - `<leader>on` - New note (Zettelkasten)
 - `<leader>oq` - Quick switch notes
 - `<leader>oo` - Search notes
-- `<leader>ot` - Today's daily
-- `<leader>oy` - Yesterday's daily
-- `<leader>otm` - Tomorrow's daily
-- `<leader>ods` - Dailies picker (last 7 days)
-- `<leader>oe` - Extract note
-- `<leader>of` - Follow link (buffer mapping)
-- `<leader>od` - Toggle checkbox (buffer mapping)
-
-**Dependencies**: Uses fzf-lua for pickers (LazyVim default)
-**Note**: nvim-cmp integration disabled (using blink.cmp instead)
-**Status**: ⚠️ Phasing out - migrating to custom keymaps
 
 ---
 
-### 4. LazyGit (`lazygit.lua`)
+### 4. Todo Management (`todo.lua`)
+**Why**: Markdown checkbox management without obsidian.nvim dependency
+
+**Keymaps**:
+- `<leader>td` - Toggle checkbox (`[ ]` ↔ `[x]`)
+- `<leader>tc` - Convert line(s) to todo
+
+**Convert behavior**:
+- `- item` → `- [ ] item`
+- `* item` → `- [ ] * item`
+- `1. item` → `- [ ] 1. item`
+- `plain text` → `- [ ] plain text`
+
+**Visual mode**: Works on multiple selected lines
+**Status**: ✅ Working
+
+---
+
+### 5. Daily Notes (`daily-notes.lua`)
+**Why**: Quick daily note access without obsidian.nvim dependency
+**Vault**: `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/notes-vault`
+
+**Keymaps**:
+- `<leader>nt` - Open today's note
+- `<leader>ny` - Open yesterday's note
+
+**Features**:
+- Creates note from template if it doesn't exist
+- Notes stored in `dailies/YYYY-MM-DD.md`
+
+**Status**: ✅ Working
+
+---
+
+### 6. LazyGit (`lazygit.lua`)
 **Why**: Git UI inside nvim without leaving editor
 **Keymap**: `<leader>lg` - Open LazyGit
 **Features**:
@@ -79,14 +102,14 @@ built-in Snacks.zen which provides same functionality with better integration.
 
 ---
 
-### 5. Harpoon
+### 7. Harpoon
 **Why**: Quick file navigation (Prime's workflow)
 **How added**: Via LazyVim extras menu
 **Status**: ✅ Installed
 
 ---
 
-### 6. Conform.nvim (`conform.lua`)
+### 8. Conform.nvim (`conform.lua`)
 **Why**: Code formatting with prettier
 **Formatters**:
 - Markdown: prettier
@@ -95,7 +118,7 @@ built-in Snacks.zen which provides same functionality with better integration.
 
 ---
 
-### 7. Lualine (`lualine.lua`)
+### 9. Lualine (`lualine.lua`)
 **Why**: Simplified statusline for tmux workflow
 **Customizations**:
 - Removed current directory (redundant with tmux)
@@ -180,24 +203,7 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 
 ## Custom Keymaps (`lua/config/keymaps.lua`)
 
-```lua
--- Toggle markdown todo checkbox (- [ ] <-> - [x])
-vim.keymap.set("n", "<leader>td", toggle_checkbox, { desc = "Toggle todo checkbox" })
-vim.keymap.set("v", "<leader>td", toggle_checkbox_visual, { desc = "Toggle todo checkboxes" })
-
--- Convert text to todo items
-vim.keymap.set("n", "<leader>tc", make_todo, { desc = "Convert to todo" })
-vim.keymap.set("v", "<leader>tc", make_todo_visual, { desc = "Convert lines to todos" })
-```
-
-**Toggle (`<leader>td`)**: Replaces obsidian.nvim checkbox toggle, works without plugin dependency
-**Convert (`<leader>tc`)**: Converts plain text or list items to todos:
-- `- item` → `- [ ] item`
-- `* item` → `- [ ] * item`
-- `1. item` → `- [ ] 1. item`
-- `plain text` → `- [ ] plain text`
-
-**Visual mode**: Select multiple lines to toggle/convert all at once
+Using LazyVim defaults only.
 
 ---
 
@@ -296,18 +302,21 @@ From old config:
 
 ```
 ~/.config/nvim/
-├── init.lua                    # LazyVim entry point
+├── init.lua                      # LazyVim entry point
 ├── lua/
 │   ├── config/
-│   │   ├── options.lua         # ✨ Custom options override
-│   │   ├── autocmds.lua        # ✨ Custom auto-commands
-│   │   └── keymaps.lua         # ✨ Custom keymaps
+│   │   ├── options.lua           # ✨ Custom options override
+│   │   ├── autocmds.lua          # ✨ Custom auto-commands
+│   │   └── keymaps.lua           # LazyVim defaults
 │   └── plugins/
-│       ├── colorscheme.lua     # ✨ Catppuccin config
-│       ├── obsidian.lua        # ✨ Note-taking (phasing out)
-│       ├── lazygit.lua         # ✨ Git UI
-│       └── example.lua         # LazyVim examples
-├── CUSTOMIZATIONS.md           # This file
+│       ├── colorscheme.lua       # ✨ Catppuccin config
+│       ├── obsidian.lua          # ✨ Note-taking (phasing out)
+│       ├── todo.lua              # ✨ Checkbox toggle/convert
+│       ├── daily-notes.lua       # ✨ Daily note navigation
+│       ├── custom-zettelkasten.lua # ✨ Tag search
+│       ├── lazygit.lua           # ✨ Git UI
+│       └── example.lua           # LazyVim examples
+├── CUSTOMIZATIONS.md             # This file
 └── [LazyVim default files...]
 ```
 
@@ -323,7 +332,9 @@ Use this to evaluate future customizations:
 |---------|-----------|---------|--------|----------|
 | Catppuccin theme | ✅ | ❌ | ✅ Added | High |
 | Zen mode | ✅ | Snacks.zen | ✅ Using built-in | Medium |
-| Obsidian | ✅ | ❌ | ✅ Added | High |
+| Obsidian | ✅ | ❌ | ⚠️ Phasing out | High |
+| Todo keymaps | ❌ | ❌ | ✅ todo.lua | High |
+| Daily notes | ❌ | ❌ | ✅ daily-notes.lua | High |
 | LazyGit | ✅ | ❌ | ✅ Added | High |
 | Harpoon | ✅ | Extra | ✅ Added | High |
 | Tmux nav | ✅ | ❌ | 🔲 Pending | High |
@@ -347,11 +358,12 @@ Use this to evaluate future customizations:
 7. ✅ Removed no-neck-pain.nvim, using built-in Snacks.zen (2025-12-04)
 8. ✅ Disabled nvim-cmp integration in obsidian.nvim (2025-12-04)
 9. ✅ Added custom todo checkbox toggle `<leader>td` (2025-12-04)
-10. ⏳ **Phase out Obsidian.nvim** (migrating features to custom keymaps)
-11. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
-12. 🔲 Add vim-tmux-navigator if needed
-13. 🔲 Test workflow for a week
-14. ✅ Clean up old config backups (2025-12-04)
+10. ✅ Clean up old config backups (2025-12-04)
+11. ✅ Created todo.lua plugin - moved keymaps from keymaps.lua (2025-12-12)
+12. ✅ Created daily-notes.lua plugin - `<leader>nt`, `<leader>ny` (2025-12-12)
+13. ⏳ **Phase out Obsidian.nvim** (remaining: new note, quick switch, search)
+14. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
+15. 🔲 Add vim-tmux-navigator if needed
 
 ---
 
