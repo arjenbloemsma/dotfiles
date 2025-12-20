@@ -241,8 +241,7 @@ These were in old config but **not needed** - LazyVim includes them:
 
 2. **vim-tmux-navigator**
    - Reason: Seamless vim/tmux pane navigation
-   - Status: 🔲 Not yet added
-   - Decision needed: Critical for tmux workflow?
+   - Status: ✅ Added (2025-12-20)
 
 3. **vim-maximizer**
    - Reason: Toggle window maximize
@@ -337,7 +336,7 @@ Use this to evaluate future customizations:
 | Daily notes | ❌ | ❌ | ✅ daily-notes.lua | High |
 | LazyGit | ✅ | ❌ | ✅ Added | High |
 | Harpoon | ✅ | Extra | ✅ Added | High |
-| Tmux nav | ✅ | ❌ | 🔲 Pending | High |
+| Tmux nav | ✅ | ❌ | ✅ Added | High |
 | Telescope | ✅ | fzf-lua | ✅ Skip | N/A |
 | ChatGPT | ✅ | ❌ | ✅ Skip | N/A (Claude Code) |
 | Custom keymaps | ✅ | ✅ | ✅ Skip | N/A (LazyVim defaults) |
@@ -363,7 +362,7 @@ Use this to evaluate future customizations:
 12. ✅ Created daily-notes.lua plugin - `<leader>nt`, `<leader>ny` (2025-12-12)
 13. ⏳ **Phase out Obsidian.nvim** (remaining: new note, quick switch, search)
 14. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
-15. 🔲 Add vim-tmux-navigator if needed
+15. ✅ Added vim-tmux-navigator (2025-12-20)
 
 ---
 
