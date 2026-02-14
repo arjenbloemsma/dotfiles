@@ -1,12 +1,16 @@
--- Custom zettelkasten functionality for YAML list format tags
+-- Custom zettelkasten functionality
 --
--- Standard zettelkasten plugins (telekasten.nvim) don't properly parse
--- YAML list format tags. This plugin provides custom telescope-based
--- tag search that works with frontmatter like:
+-- Tag search: Standard zettelkasten plugins (telekasten.nvim) don't properly
+-- parse YAML list format tags. This provides custom telescope-based tag search
+-- that works with frontmatter like:
 --
 --   tags:
 --     - tag-one
 --     - tag-two
+--
+-- Enhanced gf: native gf treats #anchor as part of the filename (# is in
+-- isfname). This override strips the anchor, opens the file, then jumps to
+-- the matching markdown heading.
 --
 -- Commands:
 --   :NotesTags  - Interactive tag browser (pick tag, then see matching notes)
@@ -14,6 +18,7 @@
 --
 -- Keymaps:
 --   <leader>zt - Open interactive tag browser
+--   gf         - Go to file with markdown #heading support
 
 return {
   -- Extend telescope with custom zettelkasten commands
@@ -35,6 +40,9 @@ return {
         cwd = vault_path,
         glob_pattern = "*.md",
         prompt_title = "Tag: " .. tag,
+        -- Root-only: zettelkasten notes live at vault root, subfolders
+        -- (dailies/, templates/, etc.) don't contain tagged notes
+        additional_args = { "--max-depth", "1" },
       })
     end, { nargs = 1, desc = "Search notes by tag" })
 
@@ -44,7 +52,9 @@ return {
       -- Use ripgrep to find all unique tags in vault
       -- Pattern matches YAML list format: `  - tagname` (lowercase, numbers, hyphens)
       -- Output: sorted by frequency (most used tags first)
-      local cmd = "rg -o '  - [a-z0-9-]+' --no-filename "
+      -- Root-only: zettelkasten notes live at vault root, subfolders
+      -- (dailies/, templates/, etc.) don't contain tagged notes
+      local cmd = "rg -o '  - [a-z0-9-]+' --no-filename --max-depth 1 "
         .. vim.fn.shellescape(vault_path)
         .. " | sort | uniq -c | sort -rn"
       local results = vim.fn.systemlist(cmd)
@@ -93,5 +103,27 @@ return {
         end,
       }):find()
     end, { desc = "Browse and search notes by tag" })
+
+    -- Enhanced gf: # is in isfname by default, so native gf includes it in the
+    -- filename (e.g. file.md#heading). We temporarily remove # from isfname,
+    -- let native gf resolve the file, then jump to the heading.
+    vim.keymap.set("n", "gf", function()
+      local cfile = vim.fn.expand("<cfile>")
+      local anchor = cfile:match("#(.+)$")
+
+      local saved = vim.o.isfname
+      vim.opt.isfname:remove("#")
+
+      local ok = pcall(function()
+        vim.cmd("normal! gf")
+      end)
+
+      vim.o.isfname = saved
+
+      if ok and anchor then
+        local pattern = anchor:gsub("-", "[ -]")
+        vim.fn.search("^#\\+\\s\\+.*" .. pattern, "w")
+      end
+    end, { desc = "Go to file (with markdown heading support)" })
   end,
 }

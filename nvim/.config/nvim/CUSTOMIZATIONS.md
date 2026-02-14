@@ -44,7 +44,7 @@ built-in Snacks.zen which provides same functionality with better integration.
 Features migrated to:
 - **todo.lua** - Checkbox toggling (`<leader>td`, `<leader>tc`)
 - **daily-notes.lua** - Daily notes (`<leader>nt`, `<leader>ny`)
-- **custom-zettelkasten.lua** - Tag search (`<leader>zt`)
+- **custom-zettelkasten.lua** - Tag search (`<leader>zt`), enhanced `gf`
 
 Remaining features still using obsidian.nvim:
 - `<leader>on` - New note (Zettelkasten)
@@ -205,6 +205,19 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 
 Using LazyVim defaults only.
 
+### Enhanced `gf` (`custom-zettelkasten.lua`)
+
+**Why**: Native `gf` includes `#` in filename (it's in `isfname`), so
+`file.md#heading` fails with E447. This override temporarily removes `#` from
+`isfname`, lets native `gf` resolve the file, then jumps to the matching
+markdown heading.
+
+**How**: Wraps native `gf` — temporarily tweaks `isfname`, calls `normal! gf`,
+restores `isfname`, searches for heading.
+
+**Keymap**: `gf` (overrides built-in)
+**Status**: ✅ Working (2026-02-14)
+
 ---
 
 ## What LazyVim Already Provides
@@ -312,7 +325,7 @@ From old config:
 │       ├── obsidian.lua          # ✨ Note-taking (phasing out)
 │       ├── todo.lua              # ✨ Checkbox toggle/convert
 │       ├── daily-notes.lua       # ✨ Daily note navigation
-│       ├── custom-zettelkasten.lua # ✨ Tag search
+│       ├── custom-zettelkasten.lua # ✨ Tag search + enhanced gf
 │       ├── lazygit.lua           # ✨ Git UI
 │       └── example.lua           # LazyVim examples
 ├── CUSTOMIZATIONS.md             # This file
@@ -361,6 +374,7 @@ Use this to evaluate future customizations:
 11. ✅ Created todo.lua plugin - moved keymaps from keymaps.lua (2025-12-12)
 12. ✅ Created daily-notes.lua plugin - `<leader>nt`, `<leader>ny` (2025-12-12)
 13. ⏳ **Phase out Obsidian.nvim** (remaining: new note, quick switch, search)
+16. ✅ Enhanced `gf` with markdown #heading support (2026-02-14)
 14. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
 15. ✅ Added vim-tmux-navigator (2025-12-20)
 
