@@ -1,4 +1,5 @@
-# macOS specific configs
+# macOS specific configs (in dotfiles repo, stowed)
+# Machine-local overrides go in .zshrc.local (not stowed)
 
 # pnpm
 export PNPM_HOME="~/Library/pnpm"
