@@ -8,7 +8,10 @@ export VISUAL="nvim"
 # Starship config in XDG_CONFIG_HOME
 export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
 
-# Source OS-specific configs FIRST (sets up PATH for Homebrew, etc)
+# Machine-local overrides first (not in dotfiles repo, not stowed)
+[[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.local" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.local"
+
+# Source OS-specific configs (sets up PATH for Homebrew, etc)
 if [[ "$OSTYPE" == "darwin"* ]]; then
     [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.macos" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.macos"
 elif [[ -f /etc/os-release ]]; then
@@ -85,6 +88,16 @@ function yy() {
 		cd -- "$cwd"
 	fi
 	rm -f -- "$tmp"
+}
+
+# Browse notes vault with fzf + glow preview
+notes() {
+    local style="$XDG_CONFIG_HOME/glow/catppuccin-mocha.json"
+    local file
+    file=$(find "$NOTES_VAULT" -name "*.md" | fzf \
+        --preview "script -q /dev/null glow -s $style -w \$FZF_PREVIEW_COLUMNS {}" \
+        --bind 'ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up')
+    [[ -n "$file" ]] && glow "$file"
 }
 
 # Fastfetch for the fancy system info
