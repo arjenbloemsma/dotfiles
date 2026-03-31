@@ -375,6 +375,7 @@ Use this to evaluate future customizations:
 12. ✅ Created daily-notes.lua plugin - `<leader>nt`, `<leader>ny` (2025-12-12)
 13. ⏳ **Phase out Obsidian.nvim** (remaining: new note, quick switch, search)
 16. ✅ Enhanced `gf` with markdown #heading support (2026-02-14)
+17. ✅ Changed colorscheme to `catppuccin-mocha` — nvim 0.12 ships builtin `catppuccin.vim` (static colors, no config support) which conflicts with plugin name; using flavour-specific name avoids collision and keeps transparent_background/styles/integrations working (2026-03-31)
 14. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
 15. ✅ Added vim-tmux-navigator (2025-12-20)
 
