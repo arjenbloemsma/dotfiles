@@ -1,0 +1,55 @@
+[[window]]
+name = "claude"
+startup_script = "claude"
+
+[[window]]
+name = "docker"
+startup_script = "lazydocker"
+
+[[session]]
+name = "notes vault"
+path = "~/notes-vault/"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
+name = "governance portal"
+path = "~/dev/az-governance-dashboard/"
+startup_command = "vi ."
+windows = [ "claude", "docker" ]
+
+[[session]]
+name = "knowledge base"
+path = "~/dev/knowledge-base"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
+name = "ohayo"
+path = "~/dev/ohayo/"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
+name = "whohasthekids"
+path = "~/dev/whohasthekids/"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
+name = "hayabusa"
+path = "~/dev/hayabusa/"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
+name = "nvim config"
+path = "~/dotfiles/nvim/.config/nvim"
+startup_command = "vi ."
+
+[[session]]
+name = "tmux config"
+path = "~/dotfiles/tmux/.config/tmux"
+startup_command = "vi tmux.conf"
+preview_command = "bat --color=always ~/dotfiles/tmux/.config/tmux"
+
