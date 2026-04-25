@@ -27,8 +27,7 @@ return {
     { "<leader>zt", "<cmd>NotesTags<CR>", desc = "Zettelkasten tag search" },
   },
   config = function()
-    -- Path to notes vault (adjust if vault location changes)
-    local vault_path = vim.fn.expand("~/Library/Mobile Documents/iCloud~md~obsidian/Documents/notes-vault")
+    local vault_path = vim.fn.expand(vim.g.NOTES_VAULT)
 
     -- Direct tag search: find all notes containing a specific tag
     -- Usage: :NotesTag governance

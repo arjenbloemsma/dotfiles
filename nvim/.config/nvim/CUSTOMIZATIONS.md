@@ -37,19 +37,11 @@ built-in Snacks.zen which provides same functionality with better integration.
 
 ---
 
-### 3. Obsidian.nvim (`obsidian.lua`)
-**Why**: Note-taking integration with Obsidian vault
-**Status**: ⚠️ Phasing out - replaced by custom plugins
-
-Features migrated to:
+### 3. ~~Obsidian.nvim~~ (removed 2026-04-25)
+**Why removed**: No longer using Obsidian. All functionality replaced by custom plugins:
 - **todo.lua** - Checkbox toggling (`<leader>td`, `<leader>tc`)
 - **daily-notes.lua** - Daily notes (`<leader>nt`, `<leader>ny`)
 - **custom-zettelkasten.lua** - Tag search (`<leader>zt`), enhanced `gf`
-
-Remaining features still using obsidian.nvim:
-- `<leader>on` - New note (Zettelkasten)
-- `<leader>oq` - Quick switch notes
-- `<leader>oo` - Search notes
 
 ---
 
@@ -73,7 +65,7 @@ Remaining features still using obsidian.nvim:
 
 ### 5. Daily Notes (`daily-notes.lua`)
 **Why**: Quick daily note access without obsidian.nvim dependency
-**Vault**: `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/notes-vault`
+**Vault**: Read from `vim.g.NOTES_VAULT` (set in `init.lua`)
 
 **Keymaps**:
 - `<leader>nt` - Open today's note
@@ -314,7 +306,7 @@ From old config:
 
 ```
 ~/.config/nvim/
-├── init.lua                      # LazyVim entry point
+├── init.lua                      # ✨ Env var validation + LazyVim entry point
 ├── lua/
 │   ├── config/
 │   │   ├── options.lua           # ✨ Custom options override
@@ -322,7 +314,6 @@ From old config:
 │   │   └── keymaps.lua           # LazyVim defaults
 │   └── plugins/
 │       ├── colorscheme.lua       # ✨ Catppuccin config
-│       ├── obsidian.lua          # ✨ Note-taking (phasing out)
 │       ├── todo.lua              # ✨ Checkbox toggle/convert
 │       ├── daily-notes.lua       # ✨ Daily note navigation
 │       ├── custom-zettelkasten.lua # ✨ Tag search + enhanced gf
@@ -344,7 +335,7 @@ Use this to evaluate future customizations:
 |---------|-----------|---------|--------|----------|
 | Catppuccin theme | ✅ | ❌ | ✅ Added | High |
 | Zen mode | ✅ | Snacks.zen | ✅ Using built-in | Medium |
-| Obsidian | ✅ | ❌ | ⚠️ Phasing out | High |
+| Obsidian | ✅ | ❌ | ✅ Removed | N/A |
 | Todo keymaps | ❌ | ❌ | ✅ todo.lua | High |
 | Daily notes | ❌ | ❌ | ✅ daily-notes.lua | High |
 | LazyGit | ✅ | ❌ | ✅ Added | High |
@@ -373,10 +364,10 @@ Use this to evaluate future customizations:
 10. ✅ Clean up old config backups (2025-12-04)
 11. ✅ Created todo.lua plugin - moved keymaps from keymaps.lua (2025-12-12)
 12. ✅ Created daily-notes.lua plugin - `<leader>nt`, `<leader>ny` (2025-12-12)
-13. ⏳ **Phase out Obsidian.nvim** (remaining: new note, quick switch, search)
+13. ✅ Removed obsidian.nvim, centralized env vars in init.lua (2026-04-25)
 16. ✅ Enhanced `gf` with markdown #heading support (2026-02-14)
 17. ✅ Changed colorscheme to `catppuccin-mocha` — nvim 0.12 ships builtin `catppuccin.vim` (static colors, no config support) which conflicts with plugin name; using flavour-specific name avoids collision and keeps transparent_background/styles/integrations working (2026-03-31)
-14. 🔲 Add conceallevel setting for markdown (after Obsidian removed)
+14. ~~Add conceallevel setting for markdown~~ — not needed; render-markdown.nvim stays disabled because it conceals TODO indicators regardless of Obsidian
 15. ✅ Added vim-tmux-navigator (2025-12-20)
 
 ---

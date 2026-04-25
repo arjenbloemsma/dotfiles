@@ -9,7 +9,7 @@
 -- Creates note from template if it doesn't exist.
 -- Vault path is read from $NOTES_VAULT env var (set in .zshrc).
 
-local vault_path = vim.fn.expand(os.getenv("NOTES_VAULT") or "~/notes-vault")
+local vault_path = vim.fn.expand(vim.g.NOTES_VAULT)
 local dailies_path = vault_path .. "/dailies"
 local template_path = vault_path .. "/templates/daily-note-template.md"
 
