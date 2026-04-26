@@ -88,6 +88,12 @@ get_app_name() {
     case "$package" in
         nvim) echo "neovim" ;;
         ghostty) ;;
+        bun)
+            case "$os" in
+                macos) echo "bun" ;;
+                *) ;; # installed via install script
+            esac
+            ;;
         yabai) echo "koekeishiya/formulae/yabai" ;;
         skhd) echo "koekeishiya/formulae/skhd" ;;
         azure-functions-core-tools@4) echo "azure/functions/azure-functions-core-tools@4" ;;
@@ -198,6 +204,14 @@ install_applications() {
             return
             ;;
     esac
+
+    # Install tools that need custom install on Linux
+    if [[ "$os" != "macos" ]]; then
+        if ! command -v bun >/dev/null 2>&1; then
+            echo "Installing bun..."
+            curl -fsSL https://bun.sh/install | bash
+        fi
+    fi
 
     # Install GUI apps
     echo "Installing apps..."

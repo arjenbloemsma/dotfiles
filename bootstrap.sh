@@ -10,7 +10,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Configuration
-DOTFILES_REPO="git@github.com:arjenbloemsma/dotfiles.git"
+DOTFILES_REPO="https://github.com/arjenbloemsma/dotfiles.git"
 DOTFILES_DIR="$HOME/dotfiles"
 
 # Detect OS and package manager
@@ -82,27 +82,7 @@ install_prerequisites() {
     echo ""
 }
 
-# Check SSH key for GitHub
-check_ssh_key() {
-    echo "Checking SSH key..."
 
-    if [[ ! -f "$HOME/.ssh/id_ed25519" ]] && [[ ! -f "$HOME/.ssh/id_rsa" ]]; then
-        echo -e "${YELLOW}⚠${NC} No SSH key found"
-        echo ""
-        echo "Generate SSH key:"
-        echo "  ssh-keygen -t ed25519 -C \"your.email@example.com\""
-        echo ""
-        echo "Add to GitHub:"
-        echo "  cat ~/.ssh/id_ed25519.pub"
-        echo "  https://github.com/settings/keys"
-        echo ""
-        read -p "Press Enter after adding SSH key to GitHub..."
-    else
-        echo -e "${GREEN}✓${NC} SSH key exists"
-    fi
-
-    echo ""
-}
 
 # Clone or update dotfiles repo
 clone_dotfiles() {
@@ -114,14 +94,7 @@ clone_dotfiles() {
         cd -
     else
         echo "Cloning dotfiles..."
-        if ! git clone "$DOTFILES_REPO" "$DOTFILES_DIR" 2>/dev/null; then
-            echo -e "${RED}✗${NC} Failed to clone with SSH"
-            echo ""
-            echo "Trying HTTPS fallback..."
-            HTTPS_REPO="https://github.com/arjenbloemsma/dotfiles.git"
-            git clone "$HTTPS_REPO" "$DOTFILES_DIR"
-            echo -e "${YELLOW}⚠${NC} Cloned via HTTPS - configure SSH for push access later"
-        fi
+        git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
         echo -e "${GREEN}✓${NC} Dotfiles cloned"
     fi
 
@@ -208,7 +181,6 @@ main() {
 
     install_prerequisites
     setup_zsh
-    check_ssh_key
     clone_dotfiles
     run_install "$@"
 
