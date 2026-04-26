@@ -451,6 +451,9 @@ print_completion() {
     echo "  1. Edit ~/.config/git/config.local with your git user details"
     echo "  2. Restart your shell or run: source ~/.config/zsh/.zshrc"
     echo "  3. Install tmux plugins: prefix + I (in tmux)"
+    if ! command -v ghostty >/dev/null 2>&1; then
+        echo "  4. Set terminal font to 'JetBrainsMono Nerd Font' for icon support"
+    fi
 }
 
 # Rollback to a previous backup
