@@ -18,30 +18,63 @@ DRY_RUN=false
 VERBOSE=false
 ROLLBACK_TIMESTAMP=""
 
-# Packages with config directories to stow
+# Packages with config to stow (cross-platform)
 STOW_PACKAGES=(
-    "git"
-    "zsh"
     "bat"
-    "neofetch"
-    "lazygit"
-    "ghostty"
-    "starship"
-    "nvim"
-    "tmux"
-    "yabai"
-    "skhd"
-    "yazi"
-    "gh"
     "claude"
+    "gh"
+    "ghostty"
+    "git"
+    "glow"
+    "lazygit"
+    "nvim"
+    "sesh"
+    "starship"
+    "tmux"
+    "yazi"
+    "zsh"
 )
 
-# Tools to install but not stow (no config files)
+# macOS-only stow packages
+STOW_PACKAGES_MACOS=(
+    "skhd"
+    "yabai"
+)
+
+# CLI tools — no config to stow (cross-platform)
 INSTALL_ONLY=(
-    "fnm"
-    "zoxide"
-    "fzf"
+    "azure-cli"
+    "azure-functions-core-tools@4"
+    "bun"
+    "docker"
     "fastfetch"
+    "fd"
+    "flyctl"
+    "fnm"
+    "fzf"
+    "httpie"
+    "jq"
+    "lazydocker"
+    "pandoc"
+    "powershell"
+    "ripgrep"
+    "semgrep"
+    "syncthing"
+    "tree"
+    "zoxide"
+)
+
+# GUI apps — casks on macOS, package manager on Linux
+APPS=(
+    "balenaetcher"
+    "claude-code"
+    "firefox"
+    "ghostty"
+    "keycastr"
+    "microsoft-azure-storage-explorer"
+    "pgadmin4"
+    "ungoogled-chromium"
+    "vlc"
 )
 
 # All packages to install
@@ -52,58 +85,19 @@ get_app_name() {
     local package="$1"
     local os="$2"
 
-    case "$os" in
-        macos)
-            case "$package" in
-                nvim) echo "neovim" ;;
-                bat) echo "bat" ;;
-                neofetch) echo "neofetch" ;;
-                lazygit) echo "lazygit" ;;
-                ghostty) echo "--cask ghostty" ;;
-                starship) echo "starship" ;;
-                tmux) echo "tmux" ;;
-                yabai) echo "koekeishiya/formulae/yabai" ;;
-                skhd) echo "koekeishiya/formulae/skhd" ;;
-                yazi) echo "yazi" ;;
-                gh) echo "gh" ;;
-                fnm) echo "fnm" ;;
-                zoxide) echo "zoxide" ;;
-                fzf) echo "fzf" ;;
-                fastfetch) echo "fastfetch" ;;
+    case "$package" in
+        nvim) echo "neovim" ;;
+        ghostty) ;;
+        yabai) echo "koekeishiya/formulae/yabai" ;;
+        skhd) echo "koekeishiya/formulae/skhd" ;;
+        azure-functions-core-tools@4) echo "azure/functions/azure-functions-core-tools@4" ;;
+        gh)
+            case "$os" in
+                arch) echo "github-cli" ;;
+                *) echo "gh" ;;
             esac
             ;;
-        ubuntu|debian)
-            case "$package" in
-                nvim) echo "neovim" ;;
-                bat) echo "bat" ;;
-                neofetch) echo "neofetch" ;;
-                lazygit) echo "lazygit" ;;
-                starship) echo "starship" ;;
-                tmux) echo "tmux" ;;
-                yazi) echo "yazi" ;;
-                gh) echo "gh" ;;
-                fnm) echo "fnm" ;;
-                zoxide) echo "zoxide" ;;
-                fzf) echo "fzf" ;;
-                fastfetch) echo "fastfetch" ;;
-            esac
-            ;;
-        arch)
-            case "$package" in
-                nvim) echo "neovim" ;;
-                bat) echo "bat" ;;
-                neofetch) echo "neofetch" ;;
-                lazygit) echo "lazygit" ;;
-                starship) echo "starship" ;;
-                tmux) echo "tmux" ;;
-                yazi) echo "yazi" ;;
-                gh) echo "github-cli" ;;
-                fnm) echo "fnm" ;;
-                zoxide) echo "zoxide" ;;
-                fzf) echo "fzf" ;;
-                fastfetch) echo "fastfetch" ;;
-            esac
-            ;;
+        *) echo "$package" ;;
     esac
 }
 
@@ -163,49 +157,55 @@ check_prerequisites() {
 # Install applications
 install_applications() {
     local os=$(detect_os)
-    local -a apps_to_install=()
-    local app_name
+    local -a formulae=()
+    local -a packages=("${PACKAGES[@]}")
+
+    # Add macOS-only packages
+    if [[ "$os" == "macos" ]]; then
+        packages+=("${STOW_PACKAGES_MACOS[@]}")
+    fi
 
     echo "Installing applications for $os..."
 
-    # Build list of apps to install
-    for package in "${PACKAGES[@]}"; do
+    for package in "${packages[@]}"; do
+        local app_name
         app_name=$(get_app_name "$package" "$os")
-        [[ -n "$app_name" ]] && apps_to_install+=("$app_name")
+        [[ -n "$app_name" ]] && formulae+=("$app_name")
     done
 
-    # Skip if no apps to install
-    if [[ ${#apps_to_install[@]} -eq 0 ]]; then
-        echo -e "${YELLOW}⚠${NC} No apps to install"
-        echo ""
-        return
-    fi
-
-    # Show what would be installed in dry-run
     if [[ "$DRY_RUN" == true ]]; then
-        echo -e "${BLUE}→${NC} Would install: ${apps_to_install[*]}"
+        echo -e "${BLUE}→${NC} Would install formulae: ${formulae[*]}"
+        echo -e "${BLUE}→${NC} Would install apps: ${APPS[*]}"
         echo ""
         return
     fi
 
-    # Install based on OS
+    # Install formulae
     case "$os" in
         macos|ubuntu|debian)
             if command -v brew >/dev/null 2>&1; then
-                brew install "${apps_to_install[@]}"
+                brew install "${formulae[@]}"
             else
                 echo -e "${YELLOW}⚠${NC} Homebrew not found, skipping"
                 return
             fi
             ;;
         arch)
-            yay -S --noconfirm "${apps_to_install[@]}"
+            yay -S --noconfirm "${formulae[@]}"
             ;;
         *)
             echo -e "${YELLOW}⚠${NC} Unknown OS, skipping"
             return
             ;;
     esac
+
+    # Install GUI apps
+    echo "Installing apps..."
+    if [[ "$os" == "macos" ]] && command -v brew >/dev/null 2>&1; then
+        brew install --cask "${APPS[@]}"
+    elif [[ "$os" == "arch" ]]; then
+        yay -S --noconfirm "${APPS[@]}"
+    fi
 
     echo -e "${GREEN}✓${NC} Applications installed"
     echo ""
@@ -309,8 +309,13 @@ check_all_conflicts() {
     echo "Checking for conflicts..."
 
     local has_conflicts=0
+    local os=$(detect_os)
+    local -a all_stow=("${STOW_PACKAGES[@]}")
+    if [[ "$os" == "macos" ]]; then
+        all_stow+=("${STOW_PACKAGES_MACOS[@]}")
+    fi
 
-    for package in "${PACKAGES[@]}"; do
+    for package in "${all_stow[@]}"; do
         if [[ -d "$DOTFILES_DIR/$package" ]]; then
             if check_package_conflicts "$package"; then
                 has_conflicts=1
@@ -347,10 +352,17 @@ install_package() {
 install_packages() {
     echo "Installing packages..."
     cd "$DOTFILES_DIR"
+    local os=$(detect_os)
 
     for package in "${STOW_PACKAGES[@]}"; do
         install_package "$package"
     done
+
+    if [[ "$os" == "macos" ]]; then
+        for package in "${STOW_PACKAGES_MACOS[@]}"; do
+            install_package "$package"
+        done
+    fi
 
     echo ""
 }

@@ -1,6 +1,8 @@
 # Dotfiles
 
 Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
+For detailed structure and conventions, see the
+[Dotfiles Stow Setup](~/notes-vault/1777188230-dotfiles-stow-setup.md) note.
 
 ## Supported Systems
 
@@ -8,97 +10,42 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 - Ubuntu/Debian
 - Arch/Manjaro
 
-## Packages
-
-- **git** - Git configuration (user details in `~/.gitconfig.local`)
-- **zsh** - Shell configuration with aliases and tools
-- **ghostty** - Terminal emulator
-- **starship** - Cross-shell prompt
-- **tmux** - Terminal multiplexer with plugins
-- **yabai** - Tiling window manager
-- **skhd** - Hotkey daemon
-- **yazi** - Terminal file manager
-- **gh** - GitHub CLI
-
 ## Installation
 
 ### Fresh Install (New System)
-
-Run bootstrap script (installs prerequisites, clones repo, runs install):
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/bootstrap.sh)
 ```
 
-Or manually:
-
-```bash
-# Download bootstrap script
-curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/bootstrap.sh -o bootstrap.sh
-chmod +x bootstrap.sh
-./bootstrap.sh
-```
-
 ### Manual Install (Already Cloned)
 
-1. Clone repository:
-   ```bash
-   git clone git@github.com:arjenbloemsma/dotfiles.git ~/dotfiles
-   cd ~/dotfiles
-   ```
-
-2. Run install script:
-   ```bash
-   ./install.sh
-   ```
-
-3. Configure git user details:
-   ```bash
-   # Edit ~/.config/git/config.local with your name and email
-   ```
-
-4. Install tmux plugins:
-   ```bash
-   # Press prefix + I (capital i) in tmux to install plugins
-   ```
-
-### Update Existing
-
 ```bash
+git clone git@github.com:arjenbloemsma/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-git pull
-stow --restow <package-name>
+./install.sh
 ```
 
-### Remove Package
+### Post-install
+
+- Edit `~/.config/git/config.local` with your name and email
+- Press `prefix + I` in tmux to install plugins
+
+### Manage Packages
 
 ```bash
-cd ~/dotfiles
-stow --delete <package-name>
+stow --restow <package-name>   # update
+stow --delete <package-name>   # remove
+./install.sh --dry-run          # preview changes
+./install.sh --rollback <timestamp>  # rollback
 ```
 
 ## Structure
 
-```
-dotfiles/
-├── git/
-│   ├── .gitconfig              # Public config
-│   └── .gitconfig.local.template  # Template for secrets
-├── zsh/
-│   └── .config/zsh/.zshrc
-├── ghostty/
-│   └── .config/ghostty/config
-└── ...
-```
+Each top-level directory is a stow package. See `install.sh` for the
+full list of packages, CLI tools, and GUI apps.
 
 ## Notes
 
-- **Secrets**: Never commit secrets. Git user details go in `~/.gitconfig.local` (not tracked)
+- **Secrets**: Git user details go in `~/.config/git/config.local` (not tracked)
 - **Tmux plugins**: Managed by TPM, not tracked in git
-
-## Tools Used
-
-- **Zoxide** - Smarter cd command
-- **fzf** - Fuzzy finder
-- **fnm** - Fast Node version manager
-- **Fastfetch** - System info display
