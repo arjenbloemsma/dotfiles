@@ -41,10 +41,11 @@ STOW_PACKAGES_MACOS=(
     "yabai"
 )
 
-# CLI tools — no config to stow (cross-platform)
-INSTALL_ONLY=(
+# CLI tools to install via brew (cross-platform)
+INSTALL=(
     "azure-cli"
     "azure-functions-core-tools@4"
+    "bat"
     "bun"
     "docker"
     "fastfetch"
@@ -52,15 +53,23 @@ INSTALL_ONLY=(
     "flyctl"
     "fnm"
     "fzf"
+    "gh"
+    "glow"
     "httpie"
     "jq"
     "lazydocker"
+    "lazygit"
+    "nvim"
     "pandoc"
     "powershell"
     "ripgrep"
     "semgrep"
+    "sesh"
+    "starship"
     "syncthing"
+    "tmux"
     "tree"
+    "yazi"
     "zoxide"
 )
 
@@ -77,9 +86,6 @@ APPS=(
     "vlc"
 )
 
-# All packages to install
-PACKAGES=("${STOW_PACKAGES[@]}" "${INSTALL_ONLY[@]}")
-
 # Get app name for package on specific OS
 get_app_name() {
     local package="$1"
@@ -87,7 +93,6 @@ get_app_name() {
 
     case "$package" in
         nvim) echo "neovim" ;;
-        ghostty) ;;
         bun)
             case "$os" in
                 macos) echo "bun" ;;
@@ -164,7 +169,7 @@ check_prerequisites() {
 install_applications() {
     local os=$(detect_os)
     local -a formulae=()
-    local -a packages=("${PACKAGES[@]}")
+    local -a packages=("${INSTALL[@]}")
 
     # Add macOS-only packages
     if [[ "$os" == "macos" ]]; then
