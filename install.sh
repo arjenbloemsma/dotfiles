@@ -73,6 +73,13 @@ INSTALL=(
     "zoxide"
 )
 
+# Nerd Fonts — casks on macOS, manual install on Linux
+FONTS=(
+    "font-hack-nerd-font"
+    "font-jetbrains-mono-nerd-font"
+    "font-symbols-only-nerd-font"
+)
+
 # GUI apps — casks on macOS, package manager on Linux
 APPS=(
     "balenaetcher"
@@ -216,6 +223,23 @@ install_applications() {
             echo "Installing bun..."
             curl -fsSL https://bun.sh/install | bash
         fi
+    fi
+
+    # Install fonts
+    echo "Installing fonts..."
+    if [[ "$os" == "macos" ]] && command -v brew >/dev/null 2>&1; then
+        brew install --cask "${FONTS[@]}"
+    elif [[ "$os" == "arch" ]]; then
+        yay -S --noconfirm ttf-jetbrains-mono-nerd ttf-hack-nerd ttf-nerd-fonts-symbols-mono
+    else
+        mkdir -p "$HOME/.local/share/fonts"
+        for font_url in \
+            "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" \
+            "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz" \
+            "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.tar.xz"; do
+            curl -fsSL "$font_url" | tar xJ -C "$HOME/.local/share/fonts"
+        done
+        fc-cache -f
     fi
 
     # Install GUI apps
