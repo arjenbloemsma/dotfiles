@@ -17,7 +17,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 elif [[ -f /etc/os-release ]]; then
     . /etc/os-release
     case "${ID:l}" in
-        ubuntu)
+        ubuntu|debian)
             [[ -f "$XDG_CONFIG_HOME/zsh/.zshrc.ubuntu" ]] && source "$XDG_CONFIG_HOME/zsh/.zshrc.ubuntu"
             ;;
         arch)
