@@ -110,6 +110,27 @@ built-in Snacks.zen which provides same functionality with better integration.
 
 ---
 
+### 9. Mason Tools (`mason.lua`)
+**Why**: Explicit `ensure_installed` list so all tools install on first launch.
+LazyVim extras only install Mason packages when the relevant filetype loads,
+which means a fresh machine is missing tools until you open every filetype.
+
+**LSPs**: bash-language-server, bicep-lsp, docker-compose-language-service,
+dockerfile-language-server, json-lsp, lua-language-server, marksman,
+svelte-language-server, tailwindcss-language-server, vtsls
+
+**Linters**: hadolint, markdownlint-cli2, shellcheck
+
+**Formatters**: prettier (markdown only), shfmt, stylua
+
+**Dropped** (2026-04-27): typescript-language-server (replaced by vtsls),
+tsgo (experimental), biome/oxlint/oxfmt (not yet migrated from eslint+prettier),
+xmlformatter, markdown-toc, tree-sitter-cli
+
+**Status**: ✅ Working
+
+---
+
 ### 9. Lualine (`lualine.lua`)
 **Why**: Simplified statusline for tmux workflow
 **Customizations**:

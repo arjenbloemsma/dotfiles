@@ -182,6 +182,7 @@ main() {
     install_prerequisites
     setup_zsh
     clone_dotfiles
+    mkdir -p "$HOME/dev" "$HOME/notes-vault"
     run_install "$@"
 
     echo ""

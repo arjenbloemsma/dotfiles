@@ -14,6 +14,10 @@ For detailed structure and conventions, see the
 
 ### Fresh Install (New System)
 
+Requires `curl`. Install first if missing:
+- Ubuntu/Debian: `sudo apt-get update && sudo apt install -y curl`
+- Arch: `sudo pacman -S curl`
+
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/bootstrap.sh)
 ```

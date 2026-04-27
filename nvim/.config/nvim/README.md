@@ -30,12 +30,9 @@ On first `nvim` launch, all packages auto-install via Lazy and Mason.
 - Tracked in git for reproducible installs across machines
 
 ### Mason Tools (LSPs, formatters, linters)
-- **LazyVim extras auto-handle most tools** - enabled extras in `lazyvim.json` automatically install required Mason packages via `ensure_installed`
-- **Additional tools** not covered by extras are in `lua/plugins/mason.lua`
-  - `prettier` - used by conform for markdown (lang.markdown extra configures but doesn't auto-install)
-  - `bicep-lsp` - Azure Bicep LSP
-
-Everything auto-installs on new machine via LazyVim/Mason `ensure_installed`.
+All tools are explicitly listed in `lua/plugins/mason.lua` via `ensure_installed`.
+This ensures a fresh machine gets everything on first `nvim` launch — no need
+to open specific filetypes to trigger lazy installation.
 
 ## Resources
 
