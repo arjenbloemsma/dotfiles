@@ -1,0 +1,7 @@
+FROM debian:12
+RUN apt-get update && apt-get install -y curl sudo
+RUN useradd -m -s /bin/bash testuser \
+    && echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+USER testuser
+WORKDIR /home/testuser
+CMD ["bash", "-c", "bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/bootstrap.sh) && exec zsh"]

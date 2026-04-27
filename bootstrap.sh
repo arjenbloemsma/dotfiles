@@ -129,7 +129,7 @@ setup_zsh() {
     if [[ "$SHELL" != *"zsh"* ]]; then
         local zsh_path=$(which zsh)
         echo -e "${YELLOW}→${NC} Changing default shell to zsh..."
-        chsh -s "$zsh_path"
+        sudo chsh -s "$zsh_path" "$(whoami)" # sudo to avoid PAM password prompt in containers
         echo -e "${GREEN}✓${NC} Default shell changed to zsh"
         echo -e "${YELLOW}→${NC} Log out and back in for shell change to take effect"
     else
