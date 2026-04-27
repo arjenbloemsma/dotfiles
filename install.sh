@@ -225,6 +225,13 @@ install_applications() {
         fi
     fi
 
+    # Install Node LTS via fnm (needed by Mason for LSPs)
+    if command -v fnm >/dev/null 2>&1 && ! command -v node >/dev/null 2>&1; then
+        echo "Installing Node LTS via fnm..."
+        eval "$(fnm env --shell bash)" && fnm install --lts
+        fnm default lts-latest # persist across shells, fnm env alone is session-only
+    fi
+
     # Skip fonts and GUI apps in containers
     if [[ -f /.dockerenv ]] || [[ -f /run/.containerenv ]]; then
         echo -e "${YELLOW}⚠${NC} Container detected, skipping fonts and GUI apps"
