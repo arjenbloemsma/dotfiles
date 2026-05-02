@@ -182,7 +182,8 @@ main() {
     install_prerequisites
     setup_zsh
     clone_dotfiles
-    mkdir -p "$HOME/dev" "$HOME/notes-vault"
+    mkdir -p "$HOME/dev"
+    "$DOTFILES_DIR/scripts/join-notes-mesh.sh"
     run_install "$@"
 
     echo ""

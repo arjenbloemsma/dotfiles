@@ -30,9 +30,27 @@ cd ~/dotfiles
 ./install.sh
 ```
 
+### Notes Vault Only (Standalone)
+
+For a temp/exploration machine — installs syncthing via the native package
+manager, creates `~/notes-vault`, starts the syncthing service, and prints
+the new node's device ID + Web UI URL for pairing from a peer. No full
+dotfiles install. Works on bare macOS (requires brew), Debian/Ubuntu, Arch,
+Fedora.
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/scripts/join-notes-mesh.sh)
+```
+
+Or if the repo is already cloned:
+
+```bash
+~/dotfiles/scripts/join-notes-mesh.sh
+```
+
 ### Post-install
 
-- Edit `~/.config/git/config.local` with your name and email
+- Edit `~/.config/git/config.local` with name and email
 - Press `prefix + I` in tmux to install plugins
 
 ### Manage Packages
