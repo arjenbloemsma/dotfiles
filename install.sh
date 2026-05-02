@@ -217,6 +217,22 @@ install_applications() {
             ;;
     esac
 
+    # Install Nix (required by devbox) — cross-platform, non-interactive.
+    # Uses Determinate Systems installer; --no-confirm skips the diagnostic-data prompt.
+    # macOS still prompts for sudo to create the /nix volume.
+    # /nix/receipt.json is the install marker the Determinate installer drops on success;
+    # it's authoritative regardless of whether the current shell has the Nix PATH hooks loaded.
+    if [[ ! -e /nix/receipt.json ]]; then
+        echo "Installing Nix..."
+        curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
+    fi
+
+    # Install devbox (cross-platform official installer; uses the Nix installed above)
+    if ! command -v devbox >/dev/null 2>&1; then
+        echo "Installing devbox..."
+        curl -fsSL https://get.jetify.com/devbox | bash
+    fi
+
     # Install tools that need custom install on Linux
     if [[ "$os" != "macos" ]]; then
         if ! command -v bun >/dev/null 2>&1; then
@@ -281,58 +297,76 @@ backup_file() {
     return 1
 }
 
-# Check for conflicts in a package
-check_package_conflicts() {
+# Classify each conflict for a package and auto-resolve safe ones.
+# Categories:
+# - Path resolves into the dotfiles repo (already stowed via direct symlink or tree-folded
+#   parent dir) → no-op; stow will refresh the link as part of restow.
+# - Real file with content identical to dotfiles version → backup + remove (safe replace).
+# - Real file with differing content → unresolvable; human must reconcile.
+# - Directory → unresolvable; recursive auto-merge is unsafe.
+# - Symlink pointing outside the dotfiles repo → unresolvable.
+# Returns 0 if package is clear, 1 if any unresolvable conflicts remain.
+classify_and_resolve_conflicts() {
     local package="$1"
-    local -a conflict_files=()
+    local -a unresolvable=()
 
-    cd "$DOTFILES_DIR/$package"
+    # Walk the package via `git ls-files`: every tracked file maps to a target symlink at
+    # $HOME/<rel_path>. Using git as the source of truth means the walk respects .gitignore
+    # (so junk like .DS_Store, lockfiles, and backup dirs are excluded by the same rules
+    # that keep them out of the repo).
+    while IFS= read -r -d '' rel_path; do
+        [[ -z "$rel_path" ]] && continue
 
-    # Let stow determine which files would be installed
-    # Use stow's simulation to get the list
-    local stow_files
-    stow_files=$(stow --no --verbose=2 "$package" 2>&1 | grep "LINK:" | awk '{print $3}')
+        local target_file="$HOME/$rel_path"
+        local source_file="$DOTFILES_DIR/$package/$rel_path"
 
-    while IFS= read -r target_path; do
-        [[ -z "$target_path" ]] && continue
-
-        local target_file="$HOME/$target_path"
-
-        # Skip if target doesn't exist
+        # Nothing there → no conflict
         [[ ! -e "$target_file" ]] && continue
 
-        # Check if it's a real file (conflict) or wrong symlink
-        if [[ ! -L "$target_file" ]]; then
-            # Real file - conflict
-            conflict_files+=("$target_path")
-        else
-            # Symlink - check if points to our dotfiles
-            local link_target=$(readlink "$target_file")
-            local expected_prefix="$DOTFILES_DIR/$package"
+        # CRITICAL SAFETY: resolve the target through every symlink in its path. If the
+        # resolved location lives inside the dotfiles repo, the package is already stowed
+        # — either by a direct symlink at this path, or via tree-folding (a parent dir is
+        # a symlink and individual files are reached through it). In that case `rm` here
+        # would delete the dotfile source itself. Skip and let stow refresh the link.
+        local resolved_target
+        resolved_target=$(readlink -f "$target_file" 2>/dev/null || echo "$target_file")
+        if [[ "$resolved_target" == "$DOTFILES_DIR"/* ]]; then
+            continue
+        fi
 
-            # Check if symlink points to our dotfiles
-            if [[ ! "$link_target" =~ ^$expected_prefix ]]; then
-                conflict_files+=("$target_path")
+        # Direct symlink pointing somewhere outside the dotfiles repo
+        if [[ -L "$target_file" ]]; then
+            unresolvable+=("symlink → $resolved_target: $rel_path")
+            continue
+        fi
+
+        # Directory always needs human review
+        if [[ -d "$target_file" ]]; then
+            unresolvable+=("directory: $rel_path")
+            continue
+        fi
+
+        # Real file: identical content → safe auto-resolve, otherwise unresolvable
+        if cmp -s "$target_file" "$source_file" 2>/dev/null; then
+            if [[ "$DRY_RUN" == false ]]; then
+                backup_file "$target_file"
+                rm -f "$target_file"
             fi
-        fi
-    done <<< "$stow_files"
-
-    # Print summary if conflicts found
-    if [[ ${#conflict_files[@]} -gt 0 ]]; then
-        local count=${#conflict_files[@]}
-        if [[ $count -le 3 ]]; then
-            for file in "${conflict_files[@]}"; do
-                echo -e "${YELLOW}  ⚠${NC} $file"
-            done
+            print_action "resolved (identical): $rel_path" false
         else
-            echo -e "${YELLOW}  ⚠${NC} ${conflict_files[0]}"
-            echo -e "${YELLOW}  ⚠${NC} ${conflict_files[1]}"
-            echo -e "${YELLOW}  ⚠${NC} ... and $((count - 2)) more files"
+            unresolvable+=("differs: $rel_path  (review: diff $target_file $source_file)")
         fi
-        return 0
+    done < <(git -C "$DOTFILES_DIR/$package" ls-files -z)
+
+    if [[ ${#unresolvable[@]} -gt 0 ]]; then
+        echo -e "${RED}✗${NC} $package — unresolvable conflicts:" >&2
+        for entry in "${unresolvable[@]}"; do
+            echo -e "${RED}  ✗${NC} $entry" >&2
+        done
+        return 1
     fi
 
-    return 1
+    return 0
 }
 
 # Setup git config.local
@@ -359,11 +393,12 @@ setup_git_config() {
     echo ""
 }
 
-# Check conflicts for all packages
+# Resolve safe conflicts and abort on anything ambiguous, BEFORE any package gets stowed.
+# Single complete picture for the user instead of a half-applied bootstrap.
 check_all_conflicts() {
     echo "Checking for conflicts..."
 
-    local has_conflicts=0
+    local has_unresolvable=0
     local os=$(detect_os)
     local -a all_stow=("${STOW_PACKAGES[@]}")
     if [[ "$os" == "macos" ]]; then
@@ -372,16 +407,21 @@ check_all_conflicts() {
 
     for package in "${all_stow[@]}"; do
         if [[ -d "$DOTFILES_DIR/$package" ]]; then
-            if check_package_conflicts "$package"; then
-                has_conflicts=1
+            if ! classify_and_resolve_conflicts "$package"; then
+                has_unresolvable=1
             fi
         fi
     done
 
-    if [[ $has_conflicts -eq 0 ]]; then
-        echo -e "${GREEN}✓${NC} No conflicts found"
+    if [[ $has_unresolvable -eq 1 ]]; then
+        echo "" >&2
+        echo -e "${RED}✗${NC} Bootstrap aborted — resolve the conflicts above and re-run." >&2
+        echo "    For files that differ: pick the canonical version (dotfiles or local)," >&2
+        echo "    update the dotfiles repo or remove the local file accordingly." >&2
+        exit 1
     fi
 
+    echo -e "${GREEN}✓${NC} No conflicts (or all auto-resolved)"
     echo ""
 }
 
