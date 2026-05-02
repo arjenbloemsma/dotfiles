@@ -1,0 +1,15 @@
+# Copy this file to scripts/notes-mesh.conf.local and fill in real values.
+# notes-mesh.conf.local is gitignored — device IDs leak IPs via the public
+# discovery server, so do not commit them.
+
+NOTES_FOLDER_ID="notes-vault"
+NOTES_FOLDER_LABEL="notes-vault"
+
+# One peer per line: "DEVICE_ID|NAME"
+NOTES_MESH_PEERS=(
+  "AAAAAAA-BBBBBBB-CCCCCCC-DDDDDDD-EEEEEEE-FFFFFFF-GGGGGGG-HHHHHHH|peer-name-1"
+  "AAAAAAA-BBBBBBB-CCCCCCC-DDDDDDD-EEEEEEE-FFFFFFF-GGGGGGG-HHHHHHH|peer-name-2"
+)
+
+# Override on a temp/curl-piped machine without editing this file:
+#   NOTES_MESH_PEERS_ENV="ID1|name1,ID2|name2" ./join-notes-mesh.sh

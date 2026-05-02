@@ -1,6 +1,7 @@
 tmux/.config/tmux/plugins
 .DS_Store
 git/.config/git/config.local
+scripts/notes-mesh.conf.local
 lazygit/.config/lazygit/state.yml
 nvim/.config/nvim/bak/
 

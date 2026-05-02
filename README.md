@@ -33,19 +33,47 @@ cd ~/dotfiles
 ### Notes Vault Only (Standalone)
 
 For a temp/exploration machine — installs syncthing via the native package
-manager, creates `~/notes-vault`, starts the syncthing service, and prints
-the new node's device ID + Web UI URL for pairing from a peer. No full
-dotfiles install. Works on bare macOS (requires brew), Debian/Ubuntu, Arch,
-Fedora.
+manager, creates `~/notes-vault`, starts the service, pairs with the
+always-on anchor node, and shares the `notes-vault` folder with it. No
+full dotfiles install. Works on bare macOS (requires brew), Debian/Ubuntu,
+Arch, Fedora.
+
+The script needs the anchor's device ID — supplied via either a config
+file or an env var. Device IDs leak IPs through the public discovery
+server, so **do not commit them**; `scripts/notes-mesh.conf.local` is
+gitignored.
+
+**One-liner (no clone) — env var:**
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/scripts/join-notes-mesh.sh)
+NOTES_MESH_PEERS_ENV="DEVICE_ID|anchor-node" \
+  bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/scripts/join-notes-mesh.sh)
 ```
 
-Or if the repo is already cloned:
+Multiple peers (anchor plus optional direct P2P) — comma-separate them:
+`"ID1|anchor,ID2|peer-2"`.
+
+**Repo already cloned — config file:**
 
 ```bash
+cp ~/dotfiles/scripts/notes-mesh.conf.template ~/dotfiles/scripts/notes-mesh.conf.local
+# edit notes-mesh.conf.local with the anchor's device ID + name
 ~/dotfiles/scripts/join-notes-mesh.sh
+```
+
+**After running on the new box:** open the anchor's web UI from a
+machine that already has SSH access to it (e.g. the primary workstation,
+not the new box itself). Accept the two prompts — "New Device" for the
+new hostname, then "New Folder" to share `notes-vault` back. Sync starts
+automatically.
+
+If the anchor's GUI binds to localhost (default), reach it via SSH tunnel
+from that primary machine — pick a free local port to avoid clashing
+with the local syncthing on `8384`:
+
+```bash
+ssh -L 8385:127.0.0.1:8384 anchor-host
+# then http://127.0.0.1:8385 in the browser
 ```
 
 ### Post-install

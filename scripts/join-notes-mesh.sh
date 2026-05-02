@@ -5,7 +5,9 @@
 # - Installs syncthing if missing (native package manager only, no brew on Linux)
 # - Creates ~/notes-vault
 # - Starts syncthing as a user service
-# - Prints device ID + Web UI URL so you can pair it from a peer
+# - Reads peer list from notes-mesh.conf.local (or NOTES_MESH_PEERS_ENV var)
+# - Adds each peer as a remote device and shares notes-vault with each
+# - Prints device ID + Web UI URL so a peer can accept the pairing
 #
 # Safe to re-run. Works on macOS (requires brew), Debian/Ubuntu, Arch, Fedora.
 
@@ -17,7 +19,14 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONF_FILE="$SCRIPT_DIR/notes-mesh.conf.local"
 VAULT_DIR="$HOME/notes-vault"
+
+# Defaults — overridable in conf file
+NOTES_FOLDER_ID="notes-vault"
+NOTES_FOLDER_LABEL="notes-vault"
+NOTES_MESH_PEERS=()
 
 detect_os() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -30,7 +39,6 @@ detect_os() {
     fi
 }
 
-# Fail fast if the package manager we expect isn't actually usable
 # Verify a package manager binary is present and runnable. Exits on failure.
 check_pkg_manager() {
     local cmd="$1"
@@ -59,6 +67,33 @@ require_pkg_manager() {
             ;;
     esac
     echo -e "${GREEN}✓${NC} package manager ready ($os)"
+}
+
+# Load peers from conf file or env var. Env var wins.
+# Conf file format documented in notes-mesh.conf.template.
+# Env format: comma-separated "ID|name" entries.
+load_peers() {
+    if [[ -n "${NOTES_MESH_PEERS_ENV:-}" ]]; then
+        IFS=',' read -r -a NOTES_MESH_PEERS <<< "$NOTES_MESH_PEERS_ENV"
+        echo -e "${GREEN}✓${NC} loaded ${#NOTES_MESH_PEERS[@]} peer(s) from NOTES_MESH_PEERS_ENV"
+        return
+    fi
+
+    if [[ -f "$CONF_FILE" ]]; then
+        # shellcheck disable=SC1090
+        . "$CONF_FILE"
+        if (( ${#NOTES_MESH_PEERS[@]} == 0 )); then
+            echo -e "${RED}✗${NC} $CONF_FILE has no peers"
+            exit 1
+        fi
+        echo -e "${GREEN}✓${NC} loaded ${#NOTES_MESH_PEERS[@]} peer(s) from $(basename "$CONF_FILE")"
+        return
+    fi
+
+    echo -e "${RED}✗${NC} no peer config found"
+    echo "   create $CONF_FILE (copy from notes-mesh.conf.template)"
+    echo "   or set NOTES_MESH_PEERS_ENV=\"id1|name1,id2|name2\""
+    exit 1
 }
 
 install_syncthing() {
@@ -119,15 +154,62 @@ start_syncthing() {
     esac
 }
 
-# Wait for syncthing to write its config (first run) or already have one
-wait_for_config() {
-    local config_path="$1"
-    local tries=20
+# Wait until the local syncthing REST API answers — the CLI talks to it,
+# so a successful list call confirms config + GUI are both ready.
+wait_for_api() {
+    local tries=30
     while (( tries-- > 0 )); do
-        [[ -f "$config_path" ]] && return 0
+        if syncthing cli config devices list >/dev/null 2>&1; then
+            echo -e "${GREEN}✓${NC} syncthing API reachable"
+            return 0
+        fi
         sleep 1
     done
-    return 1
+    echo -e "${RED}✗${NC} syncthing API never came up"
+    exit 1
+}
+
+# Idempotently add each peer as a remote device, ensure the notes-vault
+# folder exists, and share it with each peer. No introducer flag —
+# trust is granted explicitly per peer.
+apply_mesh_config() {
+    local existing_devices existing_folders existing_folder_devices entry id name
+
+    existing_devices=$(syncthing cli config devices list 2>/dev/null || true)
+
+    for entry in "${NOTES_MESH_PEERS[@]}"; do
+        id="${entry%%|*}"
+        name="${entry##*|}"
+        if grep -qx "$id" <<< "$existing_devices"; then
+            echo -e "${GREEN}✓${NC} peer already known: $name"
+        else
+            syncthing cli config devices add --device-id "$id" --name "$name"
+            echo -e "${GREEN}✓${NC} added peer: $name"
+        fi
+    done
+
+    existing_folders=$(syncthing cli config folders list 2>/dev/null || true)
+    if grep -qx "$NOTES_FOLDER_ID" <<< "$existing_folders"; then
+        echo -e "${GREEN}✓${NC} folder already exists: $NOTES_FOLDER_ID"
+    else
+        syncthing cli config folders add \
+            --id "$NOTES_FOLDER_ID" \
+            --label "$NOTES_FOLDER_LABEL" \
+            --path "$VAULT_DIR"
+        echo -e "${GREEN}✓${NC} added folder: $NOTES_FOLDER_ID"
+    fi
+
+    existing_folder_devices=$(syncthing cli config folders "$NOTES_FOLDER_ID" devices list 2>/dev/null || true)
+    for entry in "${NOTES_MESH_PEERS[@]}"; do
+        id="${entry%%|*}"
+        name="${entry##*|}"
+        if grep -qx "$id" <<< "$existing_folder_devices"; then
+            echo -e "${GREEN}✓${NC} folder already shared with: $name"
+        else
+            syncthing cli config folders "$NOTES_FOLDER_ID" devices add --device-id "$id"
+            echo -e "${GREEN}✓${NC} shared folder with: $name"
+        fi
+    done
 }
 
 config_path_for() {
@@ -143,19 +225,8 @@ print_join_info() {
     local config_path
     config_path=$(config_path_for "$os")
 
-    echo ""
-    echo "Waiting for syncthing config..."
-    if ! wait_for_config "$config_path"; then
-        echo -e "${YELLOW}⚠${NC} config not found at $config_path — syncthing may still be starting"
-        echo "   Run: syncthing --device-id    (once it's up)"
-        return
-    fi
-
     local device_id gui_addr hostname
-    # v2 uses subcommand `device-id`, v1 used flag `--device-id`
     device_id=$(syncthing device-id 2>/dev/null || syncthing --device-id 2>/dev/null || echo "unknown")
-    # Extract address from inside <gui>...</gui> only — the first <address> in the
-    # file may belong to a <device> block (where it can be "dynamic")
     gui_addr=$(awk '/<gui/,/<\/gui>/' "$config_path" \
         | grep -oE '<address>[^<]+</address>' \
         | head -1 \
@@ -164,14 +235,17 @@ print_join_info() {
     hostname=$(hostname)
 
     echo ""
-    echo -e "${GREEN}━━━ This node is up. Pair it from a peer: ━━━${NC}"
+    echo -e "${GREEN}━━━ This node is configured. Two clicks remain on each peer: ━━━${NC}"
     echo ""
     echo -e "  Hostname:   ${BLUE}$hostname${NC}"
     echo -e "  Device ID:  ${BLUE}$device_id${NC}"
     echo -e "  Web UI:     ${BLUE}http://$gui_addr${NC}"
     echo ""
-    echo "  On a peer (e.g. your Hetzner node) → Web UI → Add Remote Device →"
-    echo "  paste the Device ID, then share the 'notes-vault' folder with it."
+    echo "  On each peer's web UI:"
+    echo "    1. Accept the 'New Device' prompt for this hostname"
+    echo "    2. Accept the 'New Folder' prompt to share notes-vault back"
+    echo ""
+    echo "  Then notes-vault syncs automatically."
     echo ""
 }
 
@@ -185,9 +259,12 @@ main() {
     echo ""
 
     require_pkg_manager "$os"
+    load_peers
     install_syncthing "$os"
     create_vault
     start_syncthing "$os"
+    wait_for_api
+    apply_mesh_config
     print_join_info "$os"
 }
 
