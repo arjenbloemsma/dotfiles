@@ -2,9 +2,6 @@
 name = "claude"
 startup_script = "claude"
 
-[[window]]
-name = "docker"
-startup_script = "lazydocker"
 
 [[session]]
 name = "notes vault"
@@ -18,7 +15,7 @@ windows = [ "claude" ]
 name = "governance portal"
 path = "~/dev/az-governance-dashboard/"
 startup_command = "vi ."
-windows = [ "claude", "docker" ]
+windows = [ "claude" ]
 
 [[session]]
 name = "knowledge base"
