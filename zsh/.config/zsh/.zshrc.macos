@@ -9,10 +9,3 @@ case ":$PATH:" in
 esac
 
 export PATH="/opt/homebrew/opt/curl/bin:$PATH"
-
-# bloem, my swiss army knife
-if [[ -f "$XDG_CONFIG_HOME/bloem/bloem" ]]; then
-    source "$XDG_CONFIG_HOME/bloem/bloem"
-else
-    echo "⚠️  bloem script not found at $XDG_CONFIG_HOME/bloem/bloem"
-fi

@@ -46,10 +46,7 @@ check_and_load "fnm" 'eval "$(fnm env --use-on-cd)"'
 
 # Aliases
 alias vi='nvim'
-alias blm='bloem'
 alias trem='transmission-remote'
-alias ul='ultralist'
-alias mc='mc --nosubshell'
 alias lazygit='lazygit --use-config-file="$XDG_CONFIG_HOME/lazygit/config.yml,$XDG_CONFIG_HOME/lazygit/green.yml"'
 alias showg="cat ~/.config/zsh/.zshrc|grep 'alias.*git'"
 
