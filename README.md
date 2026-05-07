@@ -8,6 +8,7 @@ For detailed structure and conventions, see the
 
 - macOS
 - Ubuntu/Debian
+- Fedora Atomic (Sway)
 - Arch/Manjaro
 
 ## Installation
@@ -74,6 +75,19 @@ with the local syncthing on `8384`:
 ```bash
 ssh -L 8385:127.0.0.1:8384 anchor-host
 # then http://127.0.0.1:8385 in the browser
+```
+
+### Fedora Atomic
+
+Bootstrap layers minimal host packages (zsh, tmux, stow, syncthing, starship)
+via `rpm-ostree`. Reboot after bootstrap for layered packages to take effect.
+
+Dev tools live in a toolbox container:
+
+```bash
+toolbox create
+toolbox enter
+~/dotfiles/scripts/toolbox-setup.sh
 ```
 
 ### Post-install

@@ -12,6 +12,8 @@ path = "~/notes-vault/"
 startup_command = "vi ."
 windows = [ "claude" ]
 
+# Marlink projects
+
 [[session]]
 name = "governance portal"
 path = "~/dev/az-governance-dashboard/"
@@ -23,6 +25,20 @@ name = "knowledge base"
 path = "~/dev/knowledge-base"
 startup_command = "vi ."
 windows = [ "claude" ]
+
+[[session]]
+name = "spo provisioning engine"
+path = "~/dev/spo-provisioning-engine/functionapp"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
+name = "infra as code"
+path = "~/dev/infra-as-code/"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+# Personal projects
 
 [[session]]
 name = "ohayo"

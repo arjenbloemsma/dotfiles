@@ -47,7 +47,6 @@ INSTALL=(
     "azure-functions-core-tools@4"
     "bat"
     "bun"
-    "docker"
     "fastfetch"
     "fd"
     "flyctl"
@@ -183,6 +182,13 @@ install_applications() {
         packages+=("${STOW_PACKAGES_MACOS[@]}")
     fi
 
+    # Fedora Atomic: host packages layered via bootstrap, dev tools go in toolbox
+    if [[ "$os" == "fedora" ]] && [[ -f /run/ostree-booted ]]; then
+        echo -e "${YELLOW}⚠${NC} Fedora Atomic: skipping app install (use toolbox-setup.sh for dev tools)"
+        echo ""
+        return
+    fi
+
     echo "Installing applications for $os..."
 
     for package in "${packages[@]}"; do
@@ -200,7 +206,7 @@ install_applications() {
 
     # Install formulae
     case "$os" in
-        macos|ubuntu|debian)
+        macos|ubuntu|debian|fedora)
             if command -v brew >/dev/null 2>&1; then
                 brew install "${formulae[@]}"
             else
@@ -275,6 +281,15 @@ install_applications() {
             brew install --cask "${APPS[@]}"
         elif [[ "$os" == "arch" ]]; then
             yay -S --noconfirm "${APPS[@]}"
+        fi
+
+        # Fedora Wayland: use foot instead of ghostty
+        if [[ "$os" == "fedora" ]]; then
+            if command -v foot >/dev/null 2>&1; then
+                echo -e "${GREEN}✓${NC} foot terminal present"
+            else
+                echo -e "${YELLOW}⚠${NC} foot terminal not found, install via: sudo dnf install foot"
+            fi
         fi
     fi
 

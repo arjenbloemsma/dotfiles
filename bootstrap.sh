@@ -56,6 +56,11 @@ install_prerequisites() {
             fi
             brew install stow
             ;;
+        fedora)
+            # Fedora Atomic: layer host-only packages, dev tools go in toolbox
+            rpm-ostree install --idempotent zsh tmux stow syncthing starship
+            echo -e "${YELLOW}→${NC} Reboot needed for layered packages to take effect"
+            ;;
         arch)
             # Install base packages with pacman
             sudo pacman -S --noconfirm git stow base-devel
@@ -73,7 +78,7 @@ install_prerequisites() {
             ;;
         *)
             echo -e "${RED}✗${NC} Unsupported OS: $os"
-            echo "Supported: macOS, Ubuntu, Arch"
+            echo "Supported: macOS, Ubuntu, Fedora Atomic, Arch"
             exit 1
             ;;
     esac
@@ -129,7 +134,11 @@ setup_zsh() {
     if [[ "$SHELL" != *"zsh"* ]]; then
         local zsh_path=$(which zsh)
         echo -e "${YELLOW}→${NC} Changing default shell to zsh..."
-        sudo chsh -s "$zsh_path" "$(whoami)" # sudo to avoid PAM password prompt in containers
+        if [[ "$os" == "fedora" ]] && [[ -f /run/ostree-booted ]]; then
+            sudo lchsh "$(whoami)" # Atomic: /etc/passwd is immutable, chsh won't work
+        else
+            sudo chsh -s "$zsh_path" "$(whoami)" # sudo to avoid PAM password prompt in containers
+        fi
         echo -e "${GREEN}✓${NC} Default shell changed to zsh"
         echo -e "${YELLOW}→${NC} Log out and back in for shell change to take effect"
     else
