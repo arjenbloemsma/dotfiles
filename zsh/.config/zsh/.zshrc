@@ -90,15 +90,5 @@ function yy() {
 	rm -f -- "$tmp"
 }
 
-# Browse notes vault with fzf + glow preview
-notes() {
-    local style="$XDG_CONFIG_HOME/glow/catppuccin-mocha.json"
-    local file
-    file=$(find "$NOTES_VAULT" -name "*.md" | fzf \
-        --preview "script -q /dev/null glow -s $style -w \$FZF_PREVIEW_COLUMNS {}" \
-        --bind 'ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up')
-    [[ -n "$file" ]] && glow "$file"
-}
-
 # Fastfetch for the fancy system info
 check_and_load "fastfetch" 'fastfetch'

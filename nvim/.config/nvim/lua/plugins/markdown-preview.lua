@@ -11,17 +11,4 @@ return {
       vim.cmd([[do FileType]])
     end,
   },
-  {
-    "folke/which-key.nvim",
-    keys = {
-      {
-        "<leader>mp",
-        function()
-          local file = vim.fn.expand("%:p")
-          vim.cmd("terminal glow -p " .. vim.fn.shellescape(file))
-        end,
-        desc = "Preview markdown with glow",
-      },
-    },
-  },
 }
