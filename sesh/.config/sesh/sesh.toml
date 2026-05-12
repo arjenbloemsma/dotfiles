@@ -2,7 +2,6 @@
 name = "claude"
 startup_script = "claude"
 
-
 [[session]]
 name = "notes vault"
 path = "~/notes-vault/"
@@ -52,6 +51,12 @@ windows = [ "claude" ]
 [[session]]
 name = "hayabusa"
 path = "~/dev/hayabusa/"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
+name = "dotfiles"
+path = "~/dotfiles/"
 startup_command = "vi ."
 windows = [ "claude" ]
 
