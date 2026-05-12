@@ -388,7 +388,7 @@ Use this to evaluate future customizations:
 13. ✅ Removed obsidian.nvim, centralized env vars in init.lua (2026-04-25)
 16. ✅ Enhanced `gf` with markdown #heading support (2026-02-14)
 17. ✅ Changed colorscheme to `catppuccin-mocha` — nvim 0.12 ships builtin `catppuccin.vim` (static colors, no config support) which conflicts with plugin name; using flavour-specific name avoids collision and keeps transparent_background/styles/integrations working (2026-03-31)
-14. ~~Add conceallevel setting for markdown~~ — not needed; render-markdown.nvim stays disabled because it conceals TODO indicators regardless of Obsidian
+14. ✅ Enabled render-markdown.nvim — `render_modes = true`, custom checkbox states for `[>]`/`[~]`/`[!]`, smaller bullet glyphs. Note: LazyVim's `extras.lang.markdown` disables checkboxes by default, so we override `checkbox.enabled = true` (2026-05-12)
 15. ✅ Added vim-tmux-navigator (2025-12-20)
 
 ---

@@ -32,16 +32,6 @@ return {
   },
 
   -- ============================================================================
-  -- RENDER-MARKDOWN.NVIM - Conceals TODO indicators
-  -- ============================================================================
-  -- This plugin sets conceallevel and conceals markdown syntax including
-  -- TODO indicators like [ ], [X], [!], [>], [~] which breaks daily workflow
-  {
-    "MeanderingProgrammer/render-markdown.nvim",
-    enabled = false,
-  },
-
-  -- ============================================================================
   -- MINI.PAIRS - Auto-pairing of quotes, brackets, braces
   -- ============================================================================
   -- Automatically creates closing pairs for quotes, brackets, braces
