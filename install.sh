@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 # Colors
 RED='\033[0;31m'
@@ -11,35 +11,10 @@ NC='\033[0m'
 
 # Configuration
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKUP_BASE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/backup"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="$BACKUP_BASE_DIR/dotfiles_$TIMESTAMP"
 DRY_RUN=false
 VERBOSE=false
-ROLLBACK_TIMESTAMP=""
 
-# Packages with config to stow (cross-platform)
-STOW_PACKAGES=(
-    "bat"
-    "claude"
-    "gh"
-    "ghostty"
-    "git"
-    "glow"
-    "lazygit"
-    "nvim"
-    "sesh"
-    "starship"
-    "tmux"
-    "yazi"
-    "zsh"
-)
-
-# macOS-only stow packages
-STOW_PACKAGES_MACOS=(
-    "skhd"
-    "yabai"
-)
+source "$DOTFILES_DIR/scripts/lib/stow-packages.sh"
 
 # CLI tools to install via brew (cross-platform)
 INSTALL=(
@@ -53,7 +28,6 @@ INSTALL=(
     "fnm"
     "fzf"
     "gh"
-    "glow"
     "httpie"
     "jq"
     "lazygit"
@@ -79,7 +53,7 @@ FONTS=(
     "font-symbols-only-nerd-font"
 )
 
-# GUI apps — casks on macOS, package manager on Linux
+# GUI apps — Homebrew casks (macOS only). Linux uses APPS_FLATPAK below.
 APPS=(
     "balenaetcher"
     "claude-code"
@@ -88,8 +62,15 @@ APPS=(
     "keycastr"
     "microsoft-azure-storage-explorer"
     "pgadmin4"
-    "ungoogled-chromium"
     "vlc"
+)
+
+# GUI apps for Linux — Flathub IDs. Subset of APPS that's actually on flathub.
+# pgadmin4, microsoft-azure-storage-explorer, claude-code: parked as devtools
+# (revisit later). balenaetcher, keycastr: macOS-only workflows.
+APPS_FLATPAK=(
+    "org.mozilla.firefox"
+    "org.videolan.VLC"
 )
 
 # Get app name for package on specific OS
@@ -206,7 +187,7 @@ install_applications() {
 
     # Install formulae
     case "$os" in
-        macos|ubuntu|debian|fedora)
+        macos|ubuntu|debian)
             if command -v brew >/dev/null 2>&1; then
                 brew install "${formulae[@]}"
             else
@@ -222,22 +203,6 @@ install_applications() {
             return
             ;;
     esac
-
-    # Install Nix (required by devbox) — cross-platform, non-interactive.
-    # Uses Determinate Systems installer; --no-confirm skips the diagnostic-data prompt.
-    # macOS still prompts for sudo to create the /nix volume.
-    # /nix/receipt.json is the install marker the Determinate installer drops on success;
-    # it's authoritative regardless of whether the current shell has the Nix PATH hooks loaded.
-    if [[ ! -e /nix/receipt.json ]]; then
-        echo "Installing Nix..."
-        curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
-    fi
-
-    # Install devbox (cross-platform official installer; uses the Nix installed above)
-    if ! command -v devbox >/dev/null 2>&1; then
-        echo "Installing devbox..."
-        curl -fsSL https://get.jetify.com/devbox | bash
-    fi
 
     # Install tools that need custom install on Linux
     if [[ "$os" != "macos" ]]; then
@@ -279,8 +244,11 @@ install_applications() {
         echo "Installing apps..."
         if [[ "$os" == "macos" ]] && command -v brew >/dev/null 2>&1; then
             brew install --cask "${APPS[@]}"
-        elif [[ "$os" == "arch" ]]; then
-            yay -S --noconfirm "${APPS[@]}"
+        elif command -v flatpak >/dev/null 2>&1; then
+            flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
+            flatpak install --user -y flathub "${APPS_FLATPAK[@]}"
+        else
+            echo -e "${YELLOW}⚠${NC} flatpak not found, skipping GUI apps"
         fi
 
         # Fedora Wayland: use foot instead of ghostty
@@ -297,26 +265,11 @@ install_applications() {
     echo ""
 }
 
-# Backup a file
-backup_file() {
-    local file="$1"
-    local relative_path="${file#$HOME/}"
-    local backup_path="$BACKUP_DIR/files/$relative_path"
-
-    if [[ -e "$file" ]] && [[ ! -L "$file" ]]; then
-        execute mkdir -p "$(dirname "$backup_path")"
-        execute cp -r "$file" "$backup_path"
-        print_action "backup: $relative_path" false
-        return 0
-    fi
-    return 1
-}
-
 # Classify each conflict for a package and auto-resolve safe ones.
 # Categories:
 # - Path resolves into the dotfiles repo (already stowed via direct symlink or tree-folded
 #   parent dir) → no-op; stow will refresh the link as part of restow.
-# - Real file with content identical to dotfiles version → backup + remove (safe replace).
+# - Real file with content identical to dotfiles version → remove (safe replace).
 # - Real file with differing content → unresolvable; human must reconcile.
 # - Directory → unresolvable; recursive auto-merge is unsafe.
 # - Symlink pointing outside the dotfiles repo → unresolvable.
@@ -364,7 +317,6 @@ classify_and_resolve_conflicts() {
         # Real file: identical content → safe auto-resolve, otherwise unresolvable
         if cmp -s "$target_file" "$source_file" 2>/dev/null; then
             if [[ "$DRY_RUN" == false ]]; then
-                backup_file "$target_file"
                 rm -f "$target_file"
             fi
             print_action "resolved (identical): $rel_path" false
@@ -450,8 +402,7 @@ install_package() {
     fi
 
     if [[ "$DRY_RUN" == false ]]; then
-        stow --delete "$package" 2>/dev/null || true
-        stow --restow "$package"
+        stow --target="$HOME" --restow "$package"
         echo -e "${GREEN}✓${NC} $package"
     else
         echo -e "${BLUE}→${NC} Would install: $package"
@@ -508,12 +459,6 @@ print_completion() {
 
     echo -e "${GREEN}✓${NC} Dotfiles installation complete!"
     echo ""
-    echo "Backup created at:"
-    echo "  $BACKUP_DIR"
-    echo ""
-    echo "To rollback, run:"
-    echo "  ./install.sh --rollback $TIMESTAMP"
-    echo ""
     echo "Next steps:"
     echo "  1. Edit ~/.config/git/config.local with your git user details"
     echo "  2. Restart your shell or run: source ~/.config/zsh/.zshrc"
@@ -521,36 +466,6 @@ print_completion() {
     if ! command -v ghostty >/dev/null 2>&1; then
         echo "  4. Set terminal font to 'JetBrainsMono Nerd Font' for icon support"
     fi
-}
-
-# Rollback to a previous backup
-rollback() {
-    local rollback_dir="$BACKUP_BASE_DIR/dotfiles_$ROLLBACK_TIMESTAMP"
-
-    if [[ ! -d "$rollback_dir" ]]; then
-        echo -e "${RED}✗${NC} Backup directory not found: $rollback_dir"
-        echo ""
-        echo "Available backups:"
-        ls -1 "$BACKUP_BASE_DIR" 2>/dev/null | grep "^dotfiles_" || echo "  None"
-        exit 1
-    fi
-
-    echo "🔄 Rolling back from: $rollback_dir"
-    echo ""
-
-    if [[ -d "$rollback_dir/files" ]]; then
-        cd "$rollback_dir/files"
-        for file in $(find . -type f); do
-            local target_file="$HOME/${file#./}"
-            echo -e "${BLUE}→${NC} Restoring: $target_file"
-            mkdir -p "$(dirname "$target_file")"
-            cp "$file" "$target_file"
-        done
-    fi
-
-    echo ""
-    echo -e "${GREEN}✓${NC} Rollback complete"
-    exit 0
 }
 
 # Parse command line arguments
@@ -565,13 +480,9 @@ parse_args() {
                 VERBOSE=true
                 shift
                 ;;
-            --rollback)
-                ROLLBACK_TIMESTAMP="$2"
-                shift 2
-                ;;
             *)
                 echo -e "${RED}Unknown option: $1${NC}"
-                echo "Usage: $0 [--dry-run] [--verbose|-v] [--rollback TIMESTAMP]"
+                echo "Usage: $0 [--dry-run] [--verbose|-v]"
                 exit 1
                 ;;
         esac
@@ -581,11 +492,6 @@ parse_args() {
 # Main execution
 main() {
     parse_args "$@"
-
-    # Handle rollback mode
-    if [[ -n "$ROLLBACK_TIMESTAMP" ]]; then
-        rollback
-    fi
 
     # Setup Homebrew environment for Linux (must be in main scope)
     local os=$(detect_os)
@@ -598,13 +504,6 @@ main() {
     # Print header
     echo "🌸 Dotfiles Installation"
     [[ "$DRY_RUN" == true ]] && echo -e "${YELLOW}(DRY RUN MODE - no changes will be made)${NC}"
-    echo ""
-
-    # Setup backup directory
-    if [[ "$DRY_RUN" == false ]]; then
-        mkdir -p "$BACKUP_DIR/files"
-    fi
-    echo "Backup directory: $BACKUP_DIR"
     echo ""
 
     # Run installation steps

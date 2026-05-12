@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 # Colors
 RED='\033[0;31m'
@@ -50,16 +50,26 @@ install_prerequisites() {
                 echo -e "${YELLOW}→${NC} Installing Homebrew..."
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-                # Add Homebrew to PATH
-                echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> "$HOME/.profile"
+                # Add Homebrew to PATH (idempotent — only append once)
+                if ! grep -q "linuxbrew/.linuxbrew/bin/brew shellenv" "$HOME/.profile" 2>/dev/null; then
+                    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> "$HOME/.profile"
+                fi
                 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             fi
             brew install stow
             ;;
         fedora)
-            # Fedora Atomic: layer host-only packages, dev tools go in toolbox
-            rpm-ostree install --idempotent zsh tmux stow syncthing starship
-            echo -e "${YELLOW}→${NC} Reboot needed for layered packages to take effect"
+            # Fedora Atomic: layer host-only packages, dev tools go in toolbox.
+            # Layered packages aren't on PATH until reboot, so the rest of bootstrap
+            # (chsh to zsh, install.sh requiring stow) can't proceed yet. Exit cleanly
+            # and let the user re-run after reboot — second run is idempotent.
+            if ! command -v zsh >/dev/null 2>&1 || ! command -v stow >/dev/null 2>&1; then
+                rpm-ostree install --idempotent zsh tmux stow syncthing starship
+                echo ""
+                echo -e "${YELLOW}→${NC} Layered packages installed."
+                echo -e "${YELLOW}→${NC} Reboot now (sudo systemctl reboot), then re-run this bootstrap."
+                exit 0
+            fi
             ;;
         arch)
             # Install base packages with pacman
@@ -131,7 +141,7 @@ setup_zsh() {
     fi
 
     # Set zsh as default shell if not already
-    if [[ "$SHELL" != *"zsh"* ]]; then
+    if [[ "${SHELL:-}" != *"zsh"* ]]; then
         local zsh_path=$(which zsh)
         echo -e "${YELLOW}→${NC} Changing default shell to zsh..."
         if [[ "$os" == "fedora" ]] && [[ -f /run/ostree-booted ]]; then
@@ -192,7 +202,6 @@ main() {
     setup_zsh
     clone_dotfiles
     mkdir -p "$HOME/dev"
-    "$DOTFILES_DIR/scripts/join-notes-mesh.sh"
     run_install "$@"
 
     echo ""

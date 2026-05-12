@@ -101,7 +101,6 @@ toolbox enter
 stow --restow <package-name>   # update
 stow --delete <package-name>   # remove
 ./install.sh --dry-run          # preview changes
-./install.sh --rollback <timestamp>  # rollback
 ```
 
 ## Structure

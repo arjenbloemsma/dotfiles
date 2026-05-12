@@ -9,6 +9,8 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+source "$(dirname "${BASH_SOURCE[0]}")/lib/stow-packages.sh"
+
 # Verify we're inside a toolbox
 if [[ ! -f /run/.containerenv ]]; then
     echo -e "${RED}✗${NC} Not inside a toolbox/container. Run: toolbox enter"
@@ -23,7 +25,6 @@ sudo dnf install -y \
     fastfetch \
     fd-find \
     fzf \
-    glow \
     httpie \
     jq \
     lazygit \
@@ -74,7 +75,7 @@ fi
 # Stow dotfiles (~/dotfiles is shared from host via $HOME)
 if [[ -d "$HOME/dotfiles" ]]; then
     cd "$HOME/dotfiles"
-    stow bat claude gh ghostty git glow lazygit nvim sesh starship tmux yazi zsh 2>/dev/null || true
+    stow "${STOW_PACKAGES[@]}" 2>/dev/null || true
     echo -e "${GREEN}✓${NC} Dotfiles stowed"
 fi
 
