@@ -1,15 +1,21 @@
 # Dotfiles
 
 Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
-For detailed structure and conventions, see the
-[Dotfiles Stow Setup](~/notes-vault/1777188230-dotfiles-stow-setup.md) note.
+Each top-level directory is a stow package whose contents mirror the
+target paths under `$HOME`. Running stow creates symlinks from `$HOME`
+into the package; restow refreshes them.
 
 ## Supported Systems
 
-- macOS
-- Ubuntu/Debian
-- Fedora Atomic (Sway)
-- Arch/Manjaro
+- macOS — full support
+- Ubuntu/Debian — full support (Homebrew on Linux for CLI tools)
+- Fedora Atomic — host stays minimal (rpm-ostree layering for zsh,
+  tmux, stow, syncthing, starship); dev tools live in a toolbox
+  container
+- Arch — partial: bootstrap works, but some CLI/GUI names in
+  `install.sh` are brew/cask names that don't map cleanly to AUR
+
+Plain Fedora (non-Atomic) is not supported.
 
 ## Installation
 
@@ -24,6 +30,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk
 ```
 
 ### Manual Install (Already Cloned)
+
+Assumes `git` and `stow` are already installed — `install.sh` aborts
+if either is missing. For a clean machine, use the bootstrap one-liner
+above instead.
 
 ```bash
 git clone git@github.com:arjenbloemsma/dotfiles.git ~/dotfiles
@@ -79,10 +89,22 @@ ssh -L 8385:127.0.0.1:8384 anchor-host
 
 ### Fedora Atomic
 
-Bootstrap layers minimal host packages (zsh, tmux, stow, syncthing, starship)
-via `rpm-ostree`. Reboot after bootstrap for layered packages to take effect.
+On first run, bootstrap layers minimal host packages (zsh, tmux, stow,
+syncthing, starship) via `rpm-ostree` and **exits**. The layered
+packages are only available after reboot, so the rest of the install
+(shell change, stow) can't proceed yet.
 
-Dev tools live in a toolbox container:
+```bash
+# First run: layers packages, then exits
+bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/bootstrap.sh)
+
+sudo systemctl reboot
+
+# Second run: detects layered packages on PATH and continues through install.sh
+bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/bootstrap.sh)
+```
+
+Dev tools live in a toolbox container, not on the host:
 
 ```bash
 toolbox create
@@ -97,16 +119,20 @@ toolbox enter
 
 ### Manage Packages
 
+Run from inside the dotfiles dir. Always pass `--target` to be explicit
+about where symlinks land, regardless of where the repo is cloned:
+
 ```bash
-stow --restow <package-name>   # update
-stow --delete <package-name>   # remove
-./install.sh --dry-run          # preview changes
+stow --target="$HOME" --restow <package-name>   # update
+stow --target="$HOME" --delete <package-name>   # remove
+./install.sh --dry-run                          # preview changes
 ```
 
 ## Structure
 
-Each top-level directory is a stow package. See `install.sh` for the
-full list of packages, CLI tools, and GUI apps.
+See `install.sh` for the full list of stow packages, CLI tools, and
+GUI apps. Shared package lists live in `scripts/lib/` and are sourced
+by `install.sh` and `scripts/toolbox-setup.sh`.
 
 ## Notes
 
