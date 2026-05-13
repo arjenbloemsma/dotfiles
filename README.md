@@ -10,8 +10,8 @@ into the package; restow refreshes them.
 - macOS — full support
 - Ubuntu/Debian — full support (Homebrew on Linux for CLI tools)
 - Fedora Atomic — host stays minimal (rpm-ostree layering for zsh,
-  tmux, stow, syncthing, starship); dev tools live in a toolbox
-  container
+  tmux, stow, syncthing); user-space host tools (starship, devpod)
+  install to `~/.local/bin`; dev tools live in a toolbox container
 - Arch — partial: bootstrap works, but some CLI/GUI names in
   `install.sh` are brew/cask names that don't map cleanly to AUR
 
@@ -90,9 +90,10 @@ ssh -L 8385:127.0.0.1:8384 anchor-host
 ### Fedora Atomic
 
 On first run, bootstrap layers minimal host packages (zsh, tmux, stow,
-syncthing, starship) via `rpm-ostree` and **exits**. The layered
-packages are only available after reboot, so the rest of the install
-(shell change, stow) can't proceed yet.
+syncthing) via `rpm-ostree` and **exits**. The layered packages are
+only available after reboot, so the rest of the install (shell change,
+stow) can't proceed yet. After reboot, `install.sh` adds user-space
+host tools (starship, devpod) to `~/.local/bin`.
 
 ```bash
 # First run: layers packages, then exits

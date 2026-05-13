@@ -163,8 +163,21 @@ install_applications() {
         packages+=("${STOW_PACKAGES_MACOS[@]}")
     fi
 
-    # Fedora Atomic: host packages layered via bootstrap, dev tools go in toolbox
+    # Fedora Atomic: host packages layered via bootstrap, dev tools go in toolbox.
+    # User-space host tools (not in /usr, not in repos, can't or shouldn't be layered)
+    # install to ~/.local/bin.
     if [[ "$os" == "fedora" ]] && [[ -f /run/ostree-booted ]]; then
+        mkdir -p "$HOME/.local/bin"
+        if ! command -v starship >/dev/null 2>&1; then
+            echo "Installing starship to ~/.local/bin..."
+            curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin"
+        fi
+        if ! command -v devpod >/dev/null 2>&1; then
+            echo "Installing devpod to ~/.local/bin..."
+            curl -fsSL -o "$HOME/.local/bin/devpod" \
+                https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64
+            chmod +x "$HOME/.local/bin/devpod"
+        fi
         echo -e "${YELLOW}⚠${NC} Fedora Atomic: skipping app install (use toolbox-setup.sh for dev tools)"
         echo ""
         return

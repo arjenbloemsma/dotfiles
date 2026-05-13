@@ -64,7 +64,7 @@ install_prerequisites() {
             # (chsh to zsh, install.sh requiring stow) can't proceed yet. Exit cleanly
             # and let the user re-run after reboot — second run is idempotent.
             if ! command -v zsh >/dev/null 2>&1 || ! command -v stow >/dev/null 2>&1; then
-                rpm-ostree install --idempotent zsh tmux stow syncthing starship
+                rpm-ostree install --idempotent zsh tmux stow syncthing
                 echo ""
                 echo -e "${YELLOW}→${NC} Layered packages installed."
                 echo -e "${YELLOW}→${NC} Reboot now (sudo systemctl reboot), then re-run this bootstrap."
