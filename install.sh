@@ -59,7 +59,6 @@ APPS=(
     "claude-code"
     "firefox"
     "ghostty"
-    "keycastr"
     "microsoft-azure-storage-explorer"
     "pgadmin4"
     "vlc"
@@ -67,7 +66,7 @@ APPS=(
 
 # GUI apps for Linux — Flathub IDs. Subset of APPS that's actually on flathub.
 # pgadmin4, microsoft-azure-storage-explorer, claude-code: parked as devtools
-# (revisit later). balenaetcher, keycastr: macOS-only workflows.
+# (revisit later). balenaetcher: macOS-only workflows.
 APPS_FLATPAK=(
     "org.mozilla.firefox"
     "org.videolan.VLC"
