@@ -27,16 +27,19 @@ sudo dnf install -y \
     fzf \
     httpie \
     jq \
-    lazygit \
     neovim \
     pandoc \
     ripgrep \
     tmux \
     tree \
-    yazi \
     zoxide \
     zsh \
     stow
+
+# lazygit and yazi aren't in default Fedora repos — pulled from COPRs
+sudo dnf copr enable -y atim/lazygit
+sudo dnf copr enable -y lihaohong/yazi
+sudo dnf install -y lazygit yazi
 
 # Install bun
 if ! command -v bun >/dev/null 2>&1; then
