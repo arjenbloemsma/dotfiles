@@ -29,6 +29,12 @@ startup_command = "vi ."
 windows = [ "claude" ]
 
 [[session]]
+name = "orbit next gen"
+path = "~/dev/orbit-next-gen"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
 name = "infra as code"
 path = "~/dev/infra-as-code/"
 startup_command = "vi ."
@@ -51,6 +57,12 @@ windows = [ "claude" ]
 [[session]]
 name = "hayabusa"
 path = "~/dev/hayabusa/"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
+name = "homelab"
+path = "~/dev/homelab/"
 startup_command = "vi ."
 windows = [ "claude" ]
 
