@@ -33,7 +33,6 @@ sudo dnf install -y \
     tmux \
     tree \
     zoxide \
-    zsh \
     stow
 
 # lazygit and yazi aren't in default Fedora repos — pulled from COPRs
@@ -64,7 +63,9 @@ fi
 # Install sesh
 if ! command -v sesh >/dev/null 2>&1; then
     echo "Installing sesh..."
-    go install github.com/joshmedeski/sesh@latest 2>/dev/null || echo -e "${YELLOW}⚠${NC} sesh requires Go, skipping"
+    mkdir -p "$HOME/.local/bin"
+    curl -fsSL https://github.com/joshmedeski/sesh/releases/latest/download/sesh_Linux_x86_64.tar.gz \
+        | tar -xz -C "$HOME/.local/bin" sesh
 fi
 
 # Install gh (GitHub CLI)
