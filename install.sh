@@ -134,6 +134,18 @@ detect_os() {
     fi
 }
 
+# Append OS-specific stow packages to the given array (passed by name).
+append_os_packages() {
+    local -n target=$1
+    local os
+    os=$(detect_os)
+    if [[ "$os" == "macos" ]]; then
+        target+=("${STOW_PACKAGES_MACOS[@]}")
+    else
+        target+=("${STOW_PACKAGES_LINUX[@]}")
+    fi
+}
+
 # Check prerequisites
 check_prerequisites() {
     echo "Checking prerequisites..."
@@ -157,10 +169,8 @@ install_applications() {
     local -a formulae=()
     local -a packages=("${INSTALL[@]}")
 
-    # Add macOS-only packages
-    if [[ "$os" == "macos" ]]; then
-        packages+=("${STOW_PACKAGES_MACOS[@]}")
-    fi
+    # Add OS-specific packages
+    append_os_packages packages
 
     # Fedora Atomic: host packages layered via bootstrap, dev tools go in toolbox.
     # User-space host tools (not in /usr, not in repos, can't or shouldn't be layered)
@@ -378,11 +388,8 @@ check_all_conflicts() {
     echo "Checking for conflicts..."
 
     local has_unresolvable=0
-    local os=$(detect_os)
     local -a all_stow=("${STOW_PACKAGES[@]}")
-    if [[ "$os" == "macos" ]]; then
-        all_stow+=("${STOW_PACKAGES_MACOS[@]}")
-    fi
+    append_os_packages all_stow
 
     for package in "${all_stow[@]}"; do
         if [[ -d "$DOTFILES_DIR/$package" ]]; then
@@ -425,17 +432,13 @@ install_package() {
 install_packages() {
     echo "Installing packages..."
     cd "$DOTFILES_DIR"
-    local os=$(detect_os)
 
-    for package in "${STOW_PACKAGES[@]}"; do
+    local -a all_packages=("${STOW_PACKAGES[@]}")
+    append_os_packages all_packages
+
+    for package in "${all_packages[@]}"; do
         install_package "$package"
     done
-
-    if [[ "$os" == "macos" ]]; then
-        for package in "${STOW_PACKAGES_MACOS[@]}"; do
-            install_package "$package"
-        done
-    fi
 
     echo ""
 }

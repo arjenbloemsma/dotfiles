@@ -9,9 +9,9 @@ into the package; restow refreshes them.
 
 - macOS — full support
 - Ubuntu/Debian — full support (Homebrew on Linux for CLI tools)
-- Fedora Atomic — host stays minimal (rpm-ostree layering for zsh,
-  tmux, stow, syncthing); user-space host tools (starship, devpod)
-  install to `~/.local/bin`; dev tools live in a toolbox container
+- Fedora Atomic — host stays minimal (rpm-ostree layering for tmux,
+  stow, syncthing); user-space host tools (starship, devpod) install
+  to `~/.local/bin`; dev tools live in a toolbox container
 - Arch — partial: bootstrap works, but some CLI/GUI names in
   `install.sh` are brew/cask names that don't map cleanly to AUR
 
@@ -89,11 +89,11 @@ ssh -L 8385:127.0.0.1:8384 anchor-host
 
 ### Fedora Atomic
 
-On first run, bootstrap layers minimal host packages (zsh, tmux, stow,
+On first run, bootstrap layers minimal host packages (tmux, stow,
 syncthing) via `rpm-ostree` and **exits**. The layered packages are
-only available after reboot, so the rest of the install (shell change,
-stow) can't proceed yet. After reboot, `install.sh` adds user-space
-host tools (starship, devpod) to `~/.local/bin`.
+only available after reboot, so the rest of the install (stow) can't
+proceed yet. After reboot, `install.sh` adds user-space host tools
+(starship, devpod) to `~/.local/bin`.
 
 ```bash
 # First run: layers packages, then exits
@@ -116,6 +116,7 @@ toolbox enter
 ### Post-install
 
 - Edit `~/.config/git/config.local` with name and email
+- Create `~/.config/shell/local.sh` for machine-specific env exports (sourced first by both shells)
 - Press `prefix + I` in tmux to install plugins
 
 ### Manage Packages
@@ -137,5 +138,8 @@ by `install.sh` and `scripts/toolbox-setup.sh`.
 
 ## Notes
 
+- **Shell**: macOS uses zsh, Linux uses bash (system defaults). Both source shared config from `~/.config/shell/`: `env.sh`, `aliases.sh`, `functions.sh`, plus a per-OS file (e.g. `macos.sh`, `fedora.sh`).
+- **Machine-local overrides**: `~/.config/shell/local.sh` — sourced first by both shells, not tracked
+- **DNS** (Linux): `bootstrap.sh` runs `scripts/setup-system-dns.sh` to switch the host to Quad9 + Mullvad and ignore DHCP-supplied DNS. Idempotent.
 - **Secrets**: Git user details go in `~/.config/git/config.local` (not tracked)
 - **Tmux plugins**: Managed by TPM, not tracked in git

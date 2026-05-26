@@ -1,4 +1,8 @@
-# Interactive zsh startup file. ZDOTDIR=~/.config/zsh/; .zshenv sets that.
+# Interactive bash startup file.
+# Sourced for interactive non-login shells. .bash_profile sources us for login shells.
+
+# Ensure XDG_CONFIG_HOME is set (defaults if not)
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 # Vi-style command-line editing
 set -o vi
@@ -12,12 +16,10 @@ for _f in env aliases functions; do
 done
 unset _f
 
-# OS-specific
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    [[ -f "$XDG_CONFIG_HOME/shell/macos.sh" ]] && source "$XDG_CONFIG_HOME/shell/macos.sh"
-elif [[ -f /etc/os-release ]]; then
+# OS-specific (Linux distros; macOS uses zsh)
+if [[ -f /etc/os-release ]]; then
     . /etc/os-release
-    case "${ID:l}" in
+    case "${ID,,}" in
         ubuntu|debian)
             [[ -f "$XDG_CONFIG_HOME/shell/ubuntu.sh" ]] && source "$XDG_CONFIG_HOME/shell/ubuntu.sh"
             ;;
@@ -30,17 +32,18 @@ elif [[ -f /etc/os-release ]]; then
     esac
 fi
 
-# Tool integrations (zsh variants of bash's init flags)
-check_and_load "fnm" 'eval "$(fnm env --use-on-cd --shell zsh)"'
-check_and_load "starship" 'eval "$(starship init zsh)"'
-check_and_load "zoxide" 'eval "$(zoxide init --cmd cd zsh)"'
-check_and_load "fzf" 'source <(fzf --zsh)'
+# Tool integrations (bash variants of zsh's init flags)
+check_and_load "fnm" 'eval "$(fnm env --use-on-cd --shell bash)"'
+check_and_load "starship" 'eval "$(starship init bash)"'
+check_and_load "zoxide" 'eval "$(zoxide init --cmd cd bash)"'
+check_and_load "fzf" 'eval "$(fzf --bash)"'
 
 # History
-HISTFILE=~/.zsh_history
+HISTFILE=~/.bash_history
 HISTSIZE=20000
-SAVEHIST=20000
-setopt appendhistory 2>/dev/null || true
+HISTFILESIZE=20000
+HISTCONTROL=ignoredups:erasedups
+shopt -s histappend 2>/dev/null || true
 
 # System info on shell start
 check_and_load "fastfetch" 'fastfetch'

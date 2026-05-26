@@ -1,6 +1,6 @@
-# Ubuntu specific configs
+# Ubuntu/Debian-specific shell setup.
 
-# Homebrew
+# Homebrew via linuxbrew
 if [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi

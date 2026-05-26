@@ -9,13 +9,18 @@ STOW_PACKAGES=(
     "lazygit"
     "nvim"
     "sesh"
+    "shell"
     "starship"
     "tmux"
     "yazi"
-    "zsh"
 )
 
 STOW_PACKAGES_MACOS=(
+    "zsh"
     "skhd"
     "yabai"
+)
+
+STOW_PACKAGES_LINUX=(
+    "bash"
 )
