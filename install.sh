@@ -15,6 +15,7 @@ DRY_RUN=false
 VERBOSE=false
 
 source "$DOTFILES_DIR/scripts/lib/stow-packages.sh"
+source "$DOTFILES_DIR/scripts/lib/download.sh"
 
 # CLI tools to install via brew (cross-platform)
 INSTALL=(
@@ -183,20 +184,23 @@ install_applications() {
         fi
         if ! command -v devpod >/dev/null 2>&1; then
             echo "Installing devpod to ~/.local/bin..."
-            curl -fsSL -o "$HOME/.local/bin/devpod" \
-                https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64
-            chmod +x "$HOME/.local/bin/devpod"
+            download_binary \
+                "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64" \
+                "$HOME/.local/bin/devpod"
         fi
         # docker-compose v2. `podman compose` looks in ~/.docker/cli-plugins/
         # and delegates to whatever it finds there. Needed because devpod
         # calls `compose ls`, which podman-compose v1 doesn't support.
         if [[ ! -x "$HOME/.docker/cli-plugins/docker-compose" ]]; then
             echo "Installing docker-compose v2 to ~/.docker/cli-plugins/..."
-            mkdir -p "$HOME/.docker/cli-plugins"
-            curl -fsSL -o "$HOME/.docker/cli-plugins/docker-compose" \
-                https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64
-            chmod +x "$HOME/.docker/cli-plugins/docker-compose"
+            download_binary \
+                "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
+                "$HOME/.docker/cli-plugins/docker-compose"
         fi
+        # podman's user socket exposes a Docker-compatible API at
+        # /run/user/$UID/podman/podman.sock. docker-compose v2 (and devpod
+        # through it) talks to this as if it were a Docker daemon.
+        systemctl --user enable --now podman.socket >/dev/null
         echo -e "${YELLOW}⚠${NC} Fedora Atomic: skipping app install (use toolbox-setup.sh for dev tools)"
         echo ""
         return
@@ -267,7 +271,7 @@ install_applications() {
                 "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" \
                 "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz" \
                 "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.tar.xz"; do
-                curl -fsSL "$font_url" | tar xJ -C "$HOME/.local/share/fonts"
+                curl -fL --progress-bar "$font_url" | tar xJ -C "$HOME/.local/share/fonts"
             done
             fc-cache -f
         fi
