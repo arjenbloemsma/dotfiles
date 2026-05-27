@@ -139,6 +139,7 @@ by `install.sh` and `scripts/toolbox-setup.sh`.
 ## Notes
 
 - **Shell**: macOS uses zsh, Linux uses bash (system defaults). Both source shared config from `~/.config/shell/`: `env.sh`, `aliases.sh`, `functions.sh`, plus a per-OS file (e.g. `macos.sh`, `fedora.sh`).
+- **First-time install on Linux**: the OS's default `~/.bashrc` and `~/.bash_profile` conflict with the stowed versions. `install.sh` prints the diff and asks `Replace? [y/N]` for each one. Always review the diff. The OOTB Fedora `.bashrc` behaviour (system `/etc/bashrc` sourcing, `$HOME/.local/bin` on PATH) is already covered by `shell/fedora.sh`; for other distros or hand-edited files, port anything useful into the right `shell/<distro>.sh` first.
 - **Machine-local overrides**: `~/.config/shell/local.sh` — sourced first by both shells, not tracked
 - **DNS** (Linux): `bootstrap.sh` runs `scripts/setup-system-dns.sh` to switch the host to Quad9 + Mullvad and ignore DHCP-supplied DNS. Idempotent.
 - **Secrets**: Git user details go in `~/.config/git/config.local` (not tracked)

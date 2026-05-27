@@ -336,14 +336,29 @@ classify_and_resolve_conflicts() {
             continue
         fi
 
-        # Real file: identical content → safe auto-resolve, otherwise unresolvable
+        # Real file: identical content → safe auto-resolve. Differing content → show
+        # the diff and ask for approval; accepting replaces the local file, declining
+        # marks the package unresolvable and aborts.
         if cmp -s "$target_file" "$source_file" 2>/dev/null; then
             if [[ "$DRY_RUN" == false ]]; then
                 rm -f "$target_file"
             fi
             print_action "resolved (identical): $rel_path" false
+        elif [[ "$DRY_RUN" == true ]]; then
+            unresolvable+=("differs (dry-run, skipped prompt): $rel_path")
         else
-            unresolvable+=("differs: $rel_path  (review: diff $target_file $source_file)")
+            echo -e "${YELLOW}⚠${NC} $rel_path differs from dotfiles version" >&2
+            echo "─── diff: $target_file vs $source_file ───" >&2
+            diff "$target_file" "$source_file" || true
+            echo "─── end diff ───" >&2
+            local ans
+            read -r -p "Replace? [y/N] " ans </dev/tty
+            if [[ "${ans,,}" == "y" || "${ans,,}" == "yes" ]]; then
+                rm -f "$target_file"
+                print_action "replaced after approval: $rel_path" false
+            else
+                unresolvable+=("differs (declined): $rel_path")
+            fi
         fi
     done < <(git -C "$DOTFILES_DIR/$package" ls-files -z)
 
