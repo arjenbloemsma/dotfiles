@@ -187,6 +187,16 @@ install_applications() {
                 https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64
             chmod +x "$HOME/.local/bin/devpod"
         fi
+        # docker-compose v2. `podman compose` looks in ~/.docker/cli-plugins/
+        # and delegates to whatever it finds there. Needed because devpod
+        # calls `compose ls`, which podman-compose v1 doesn't support.
+        if [[ ! -x "$HOME/.docker/cli-plugins/docker-compose" ]]; then
+            echo "Installing docker-compose v2 to ~/.docker/cli-plugins/..."
+            mkdir -p "$HOME/.docker/cli-plugins"
+            curl -fsSL -o "$HOME/.docker/cli-plugins/docker-compose" \
+                https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64
+            chmod +x "$HOME/.docker/cli-plugins/docker-compose"
+        fi
         echo -e "${YELLOW}⚠${NC} Fedora Atomic: skipping app install (use toolbox-setup.sh for dev tools)"
         echo ""
         return
