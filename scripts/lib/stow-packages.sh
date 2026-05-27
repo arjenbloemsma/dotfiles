@@ -8,6 +8,7 @@ STOW_PACKAGES=(
     "git"
     "lazygit"
     "nvim"
+    "podman"
     "sesh"
     "shell"
     "starship"
