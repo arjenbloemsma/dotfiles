@@ -201,6 +201,14 @@ install_applications() {
         # /run/user/$UID/podman/podman.sock. docker-compose v2 (and devpod
         # through it) talks to this as if it were a Docker daemon.
         systemctl --user enable --now podman.socket >/dev/null
+        # devpod provider: tell its 'docker' provider to use podman + the
+        # podman user socket. devpod runs subprocesses with a clean env, so
+        # the shell-level DOCKER_HOST does not carry through; the value has
+        # to live in devpod's own provider config.
+        devpod provider add docker 2>/dev/null || true
+        devpod provider set-options docker \
+            -o DOCKER_PATH=podman \
+            -o DOCKER_HOST="unix:///run/user/$UID/podman/podman.sock" >/dev/null
         echo -e "${YELLOW}⚠${NC} Fedora Atomic: skipping app install (use toolbox-setup.sh for dev tools)"
         echo ""
         return
