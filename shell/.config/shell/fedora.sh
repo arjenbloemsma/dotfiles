@@ -6,3 +6,9 @@
 # Ensure personal bin dirs are on PATH (Fedora 44 OOTB .bashrc adds these; we replace it).
 case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
 case ":$PATH:" in *":$HOME/bin:"*) ;; *) export PATH="$HOME/bin:$PATH" ;; esac
+
+# Point docker-compatible clients (docker-compose, devpod, etc.) at podman's
+# user socket so they don't default to the system /var/run/docker.sock.
+if command -v podman >/dev/null 2>&1; then
+    export DOCKER_HOST="unix:///run/user/$UID/podman/podman.sock"
+fi
