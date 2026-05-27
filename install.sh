@@ -489,9 +489,16 @@ print_completion() {
 
     echo -e "${GREEN}✓${NC} Dotfiles installation complete!"
     echo ""
+    local rc_file
+    if [[ "$(detect_os)" == "macos" ]]; then
+        rc_file="~/.config/zsh/.zshrc"
+    else
+        rc_file="~/.bashrc"
+    fi
+
     echo "Next steps:"
     echo "  1. Edit ~/.config/git/config.local with your git user details"
-    echo "  2. Restart your shell or run: source ~/.config/zsh/.zshrc"
+    echo "  2. Restart your shell or run: source $rc_file"
     echo "  3. Install tmux plugins: prefix + I (in tmux)"
     if ! command -v ghostty >/dev/null 2>&1; then
         echo "  4. Set terminal font to 'JetBrainsMono Nerd Font' for icon support"
