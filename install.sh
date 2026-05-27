@@ -313,20 +313,21 @@ classify_and_resolve_conflicts() {
         # Nothing there → no conflict
         [[ ! -e "$target_file" ]] && continue
 
-        # CRITICAL SAFETY: resolve the target through every symlink in its path. If the
-        # resolved location lives inside the dotfiles repo, the package is already stowed
-        # — either by a direct symlink at this path, or via tree-folding (a parent dir is
-        # a symlink and individual files are reached through it). In that case `rm` here
-        # would delete the dotfile source itself. Skip and let stow refresh the link.
-        local resolved_target
-        resolved_target=$(readlink -f "$target_file" 2>/dev/null || echo "$target_file")
-        if [[ "$resolved_target" == "$DOTFILES_DIR"/* ]]; then
+        # CRITICAL SAFETY: bash's -ef returns true when both paths point to
+        # the same file on disk, no matter what symlinks are in between.
+        # Catches every "already stowed" shape — including when the file is
+        # reached through a symlinked parent directory. Without this, the
+        # next check would see target and source as identical, run `rm`, and
+        # delete the dotfiles source through the symlink chain.
+        if [[ "$target_file" -ef "$source_file" ]]; then
             continue
         fi
 
-        # Direct symlink pointing somewhere outside the dotfiles repo
+        # Symlink pointing somewhere other than the source (or broken)
         if [[ -L "$target_file" ]]; then
-            unresolvable+=("symlink → $resolved_target: $rel_path")
+            local link_dest
+            link_dest=$(readlink -f "$target_file" 2>/dev/null || readlink "$target_file")
+            unresolvable+=("symlink → $link_dest: $rel_path")
             continue
         fi
 
