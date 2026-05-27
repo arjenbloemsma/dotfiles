@@ -59,14 +59,19 @@ install_prerequisites() {
             brew install stow
             ;;
         fedora)
-            # Fedora Atomic: layer host-only packages, dev tools go in toolbox.
-            # Layered packages aren't on PATH until reboot, so install.sh (which
-            # needs stow) can't proceed yet. Exit cleanly and let the user re-run
-            # after reboot — second run is idempotent.
-            if ! command -v stow >/dev/null 2>&1; then
-                rpm-ostree install --idempotent tmux stow syncthing
+            # Fedora Atomic: layer host-only packages. If any are missing, layer
+            # them all (rpm-ostree is idempotent) and exit so the user reboots.
+            # On the next run all packages pass the check and bootstrap continues.
+            local layered=(tmux stow syncthing podman-compose)
+            local missing=()
+            local pkg
+            for pkg in "${layered[@]}"; do
+                rpm -q "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+            done
+            if (( ${#missing[@]} > 0 )); then
+                rpm-ostree install --idempotent "${layered[@]}"
                 echo ""
-                echo -e "${YELLOW}→${NC} Layered packages installed."
+                echo -e "${YELLOW}→${NC} Layered packages installed (missing: ${missing[*]})."
                 echo -e "${YELLOW}→${NC} Reboot now (sudo systemctl reboot), then re-run this bootstrap."
                 exit 0
             fi
