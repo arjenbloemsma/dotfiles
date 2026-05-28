@@ -28,10 +28,8 @@ INSTALL=(
     "flyctl"
     "fnm"
     "fzf"
-    "gh"
     "httpie"
     "jq"
-    "lazygit"
     "nvim"
     "pandoc"
     "podman"
@@ -89,12 +87,6 @@ get_app_name() {
         yabai) echo "koekeishiya/formulae/yabai" ;;
         skhd) echo "koekeishiya/formulae/skhd" ;;
         azure-functions-core-tools@4) echo "azure/functions/azure-functions-core-tools@4" ;;
-        gh)
-            case "$os" in
-                arch) echo "github-cli" ;;
-                *) echo "gh" ;;
-            esac
-            ;;
         *) echo "$package" ;;
     esac
 }
@@ -203,6 +195,11 @@ setup_fedora_atomic_host() {
     devpod provider set-options docker \
         -o DOCKER_PATH=podman \
         -o DOCKER_HOST="unix:///run/user/$UID/podman/podman.sock" >/dev/null
+    # Dotfiles hook: devpod clones this repo inside every container and runs
+    # the configured script, which stows the devcontainer-only packages.
+    devpod context set-options \
+        -o DOTFILES_URL=https://github.com/arjenbloemsma/dotfiles \
+        -o DOTFILES_SCRIPT=scripts/devcontainer-install.sh >/dev/null
     echo -e "${GREEN}✓${NC} Fedora Atomic: host provisioned (per-project dev envs via devpod)"
     echo ""
 }
