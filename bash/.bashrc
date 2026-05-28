@@ -32,8 +32,10 @@ if [[ -f /etc/os-release ]]; then
     esac
 fi
 
-# Tool integrations
-check_and_load "starship" 'eval "$(starship init bash)"'
+# Tool integrations (host only — containers run a bare prompt)
+if [[ ! -f /.dockerenv ]] && [[ ! -f /run/.containerenv ]]; then
+    check_and_load "starship" 'eval "$(starship init bash)"'
+fi
 
 # History
 HISTFILE=~/.bash_history
