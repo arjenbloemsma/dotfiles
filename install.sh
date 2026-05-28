@@ -267,21 +267,11 @@ install_applications() {
     if [[ -f /.dockerenv ]] || [[ -f /run/.containerenv ]]; then
         echo -e "${YELLOW}⚠${NC} Container detected, skipping fonts and GUI apps"
     else
-        # Install fonts
-        echo "Installing fonts..."
+        # Install Nerd Fonts (macOS only — the Linux shell + tmux setup uses a
+        # bare prompt and default status bar that don't need icon glyphs).
         if [[ "$os" == "macos" ]] && command -v brew >/dev/null 2>&1; then
+            echo "Installing fonts..."
             brew install --cask "${FONTS[@]}"
-        elif [[ "$os" == "arch" ]]; then
-            yay -S --noconfirm ttf-jetbrains-mono-nerd ttf-hack-nerd ttf-nerd-fonts-symbols-mono
-        else
-            mkdir -p "$HOME/.local/share/fonts"
-            for font_url in \
-                "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" \
-                "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz" \
-                "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.tar.xz"; do
-                curl -fL --progress-bar "$font_url" | tar xJ -C "$HOME/.local/share/fonts"
-            done
-            fc-cache -f
         fi
 
         # Install GUI apps
