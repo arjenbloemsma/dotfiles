@@ -1,4 +1,4 @@
-# Shared stow package lists. Sourced by install.sh and scripts/toolbox-setup.sh.
+# Stow package lists sourced by install.sh.
 
 STOW_PACKAGES=(
     "bat"

@@ -209,7 +209,7 @@ install_applications() {
         devpod provider set-options docker \
             -o DOCKER_PATH=podman \
             -o DOCKER_HOST="unix:///run/user/$UID/podman/podman.sock" >/dev/null
-        echo -e "${YELLOW}⚠${NC} Fedora Atomic: skipping app install (use toolbox-setup.sh for dev tools)"
+        echo -e "${GREEN}✓${NC} Fedora Atomic: host provisioned (per-project dev envs via devpod)"
         echo ""
         return
     fi

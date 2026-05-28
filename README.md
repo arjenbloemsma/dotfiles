@@ -10,8 +10,10 @@ into the package; restow refreshes them.
 - macOS — full support
 - Ubuntu/Debian — full support (Homebrew on Linux for CLI tools)
 - Fedora Atomic — host stays minimal (rpm-ostree layering for tmux,
-  stow, syncthing); user-space host tools (starship, devpod) install
-  to `~/.local/bin`; dev tools live in a toolbox container
+  stow, syncthing); user-space host tools (starship, devpod,
+  docker-compose v2) install to `~/.local/bin` and
+  `~/.docker/cli-plugins/`; per-project dev environments via devpod
+  (`devpod up <repo>`)
 - Arch — partial: bootstrap works, but some CLI/GUI names in
   `install.sh` are brew/cask names that don't map cleanly to AUR
 
@@ -92,8 +94,11 @@ ssh -L 8385:127.0.0.1:8384 anchor-host
 On first run, bootstrap layers minimal host packages (tmux, stow,
 syncthing) via `rpm-ostree` and **exits**. The layered packages are
 only available after reboot, so the rest of the install (stow) can't
-proceed yet. After reboot, `install.sh` adds user-space host tools
-(starship, devpod) to `~/.local/bin`.
+proceed yet. After reboot, `install.sh` provisions the devpod
+runtime: starship, devpod, and Docker Compose v2 land in
+`~/.local/bin` and `~/.docker/cli-plugins/`; the rootless podman
+user socket is enabled; devpod's docker provider is configured to
+use podman.
 
 ```bash
 # First run: layers packages, then exits
@@ -105,13 +110,9 @@ sudo systemctl reboot
 bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/bootstrap.sh)
 ```
 
-Dev tools live in a toolbox container, not on the host:
-
-```bash
-toolbox create
-toolbox enter
-~/dotfiles/scripts/toolbox-setup.sh
-```
+Per-project dev environments live in each repo's
+`.devcontainer/devcontainer.json` and run via `devpod up <repo>`.
+No host-level dev tooling needed beyond what bootstrap provisions.
 
 ### Post-install
 
@@ -134,7 +135,7 @@ stow --target="$HOME" --delete <package-name>   # remove
 
 See `install.sh` for the full list of stow packages, CLI tools, and
 GUI apps. Shared package lists live in `scripts/lib/` and are sourced
-by `install.sh` and `scripts/toolbox-setup.sh`.
+by `install.sh`.
 
 ## Notes
 
