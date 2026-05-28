@@ -32,11 +32,8 @@ if [[ -f /etc/os-release ]]; then
     esac
 fi
 
-# Tool integrations (bash variants of zsh's init flags)
-check_and_load "fnm" 'eval "$(fnm env --use-on-cd --shell bash)"'
+# Tool integrations
 check_and_load "starship" 'eval "$(starship init bash)"'
-check_and_load "zoxide" 'eval "$(zoxide init --cmd cd bash)"'
-check_and_load "fzf" 'eval "$(fzf --bash)"'
 
 # History
 HISTFILE=~/.bash_history
@@ -44,6 +41,3 @@ HISTSIZE=20000
 HISTFILESIZE=20000
 HISTCONTROL=ignoredups:erasedups
 shopt -s histappend 2>/dev/null || true
-
-# System info on shell start
-check_and_load "fastfetch" 'fastfetch'

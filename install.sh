@@ -164,6 +164,49 @@ check_prerequisites() {
     echo ""
 }
 
+# Provision a Fedora Atomic host for the devpod-based workflow.
+# Host stays minimal: host packages (tmux, stow, syncthing) come from
+# rpm-ostree layering in bootstrap.sh; user-space host tools that
+# can't or shouldn't be layered install to ~/.local/bin and
+# ~/.docker/cli-plugins/. Per-project dev environments live in each
+# repo's .devcontainer/ and run via `devpod up <repo>`.
+setup_fedora_atomic_host() {
+    mkdir -p "$HOME/.local/bin"
+    if ! command -v starship >/dev/null 2>&1; then
+        echo "Installing starship to ~/.local/bin..."
+        curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin"
+    fi
+    if ! command -v devpod >/dev/null 2>&1; then
+        echo "Installing devpod to ~/.local/bin..."
+        download_binary \
+            "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64" \
+            "$HOME/.local/bin/devpod"
+    fi
+    # docker-compose v2. `podman compose` looks in ~/.docker/cli-plugins/
+    # and delegates to whatever it finds there. Needed because devpod
+    # calls `compose ls`, which podman-compose v1 doesn't support.
+    if [[ ! -x "$HOME/.docker/cli-plugins/docker-compose" ]]; then
+        echo "Installing docker-compose v2 to ~/.docker/cli-plugins/..."
+        download_binary \
+            "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
+            "$HOME/.docker/cli-plugins/docker-compose"
+    fi
+    # podman's user socket exposes a Docker-compatible API at
+    # /run/user/$UID/podman/podman.sock. docker-compose v2 (and devpod
+    # through it) talks to this as if it were a Docker daemon.
+    systemctl --user enable --now podman.socket >/dev/null
+    # devpod provider: tell its 'docker' provider to use podman + the
+    # podman user socket. devpod runs subprocesses with a clean env, so
+    # the shell-level DOCKER_HOST does not carry through; the value has
+    # to live in devpod's own provider config.
+    devpod provider add docker 2>/dev/null || true
+    devpod provider set-options docker \
+        -o DOCKER_PATH=podman \
+        -o DOCKER_HOST="unix:///run/user/$UID/podman/podman.sock" >/dev/null
+    echo -e "${GREEN}✓${NC} Fedora Atomic: host provisioned (per-project dev envs via devpod)"
+    echo ""
+}
+
 # Install applications
 install_applications() {
     local os=$(detect_os)
@@ -173,44 +216,8 @@ install_applications() {
     # Add OS-specific packages
     append_os_packages packages
 
-    # Fedora Atomic: host packages layered via bootstrap, dev tools go in toolbox.
-    # User-space host tools (not in /usr, not in repos, can't or shouldn't be layered)
-    # install to ~/.local/bin.
     if [[ "$os" == "fedora" ]] && [[ -f /run/ostree-booted ]]; then
-        mkdir -p "$HOME/.local/bin"
-        if ! command -v starship >/dev/null 2>&1; then
-            echo "Installing starship to ~/.local/bin..."
-            curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin"
-        fi
-        if ! command -v devpod >/dev/null 2>&1; then
-            echo "Installing devpod to ~/.local/bin..."
-            download_binary \
-                "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64" \
-                "$HOME/.local/bin/devpod"
-        fi
-        # docker-compose v2. `podman compose` looks in ~/.docker/cli-plugins/
-        # and delegates to whatever it finds there. Needed because devpod
-        # calls `compose ls`, which podman-compose v1 doesn't support.
-        if [[ ! -x "$HOME/.docker/cli-plugins/docker-compose" ]]; then
-            echo "Installing docker-compose v2 to ~/.docker/cli-plugins/..."
-            download_binary \
-                "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
-                "$HOME/.docker/cli-plugins/docker-compose"
-        fi
-        # podman's user socket exposes a Docker-compatible API at
-        # /run/user/$UID/podman/podman.sock. docker-compose v2 (and devpod
-        # through it) talks to this as if it were a Docker daemon.
-        systemctl --user enable --now podman.socket >/dev/null
-        # devpod provider: tell its 'docker' provider to use podman + the
-        # podman user socket. devpod runs subprocesses with a clean env, so
-        # the shell-level DOCKER_HOST does not carry through; the value has
-        # to live in devpod's own provider config.
-        devpod provider add docker 2>/dev/null || true
-        devpod provider set-options docker \
-            -o DOCKER_PATH=podman \
-            -o DOCKER_HOST="unix:///run/user/$UID/podman/podman.sock" >/dev/null
-        echo -e "${GREEN}✓${NC} Fedora Atomic: host provisioned (per-project dev envs via devpod)"
-        echo ""
+        setup_fedora_atomic_host
         return
     fi
 
