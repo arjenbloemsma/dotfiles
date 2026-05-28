@@ -166,7 +166,17 @@ setup_fedora_atomic_host() {
     mkdir -p "$HOME/.local/bin"
     if ! command -v starship >/dev/null 2>&1; then
         echo "Installing starship to ~/.local/bin..."
-        curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin"
+        # Installer prints ~50 lines of per-shell setup notes — redirect to
+        # /dev/null. Verify the binary lands and runs, since "installer exited
+        # 0" alone is not proof of a working binary.
+        if curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin" >/dev/null \
+            && [[ -x "$HOME/.local/bin/starship" ]] \
+            && "$HOME/.local/bin/starship" --version >/dev/null 2>&1; then
+            echo -e "${GREEN}✓${NC} starship installed"
+        else
+            echo -e "${RED}✗${NC} starship install failed" >&2
+            return 1
+        fi
     fi
     if ! command -v devpod >/dev/null 2>&1; then
         echo "Installing devpod to ~/.local/bin..."
@@ -517,7 +527,7 @@ print_completion() {
     echo "  1. Edit ~/.config/git/config.local with your git user details"
     echo "  2. Restart your shell or run: source $rc_file"
     echo "  3. Install tmux plugins: prefix + I (in tmux)"
-    if ! command -v ghostty >/dev/null 2>&1; then
+    if [[ "$(detect_os)" == "macos" ]] && ! command -v ghostty >/dev/null 2>&1; then
         echo "  4. Set terminal font to 'JetBrainsMono Nerd Font' for icon support"
     fi
 }
