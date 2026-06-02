@@ -162,10 +162,6 @@ main() {
 
     echo ""
     echo -e "${GREEN}✓${NC} Bootstrap complete!"
-    echo ""
-    echo "Next steps:"
-    echo "  1. Configure git: edit ~/.config/git/config.local"
-    echo "  2. Open a new terminal so the stowed shell config is picked up"
 }
 
 main "$@"
