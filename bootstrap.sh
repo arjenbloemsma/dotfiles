@@ -62,7 +62,7 @@ install_prerequisites() {
             # Fedora Atomic: layer host-only packages. If any are missing, layer
             # them all (rpm-ostree is idempotent) and exit so the user reboots.
             # On the next run all packages pass the check and bootstrap continues.
-            local layered=(tmux stow syncthing)
+            local layered=(tmux stow syncthing tailscale)
             local missing=()
             local pkg
             for pkg in "${layered[@]}"; do

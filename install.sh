@@ -60,6 +60,7 @@ APPS=(
     "ghostty"
     "microsoft-azure-storage-explorer"
     "pgadmin4"
+    "tailscale"
     "vlc"
 )
 
@@ -197,6 +198,7 @@ setup_fedora_atomic_host() {
     # /run/user/$UID/podman/podman.sock. docker-compose v2 (and devpod
     # through it) talks to this as if it were a Docker daemon.
     systemctl --user enable --now podman.socket >/dev/null
+    sudo systemctl enable --now tailscaled >/dev/null
     # devpod provider: tell its 'docker' provider to use podman + the
     # podman user socket. devpod runs subprocesses with a clean env, so
     # the shell-level DOCKER_HOST does not carry through; the value has
@@ -527,8 +529,11 @@ print_completion() {
     echo "  1. Edit ~/.config/git/config.local with your git user details"
     echo "  2. Restart your shell or run: source $rc_file"
     echo "  3. Install tmux plugins: prefix + I (in tmux)"
+    if command -v tailscale >/dev/null 2>&1 && ! tailscale status >/dev/null 2>&1; then
+        echo "  4. Sign into tailnet: sudo tailscale up"
+    fi
     if [[ "$(detect_os)" == "macos" ]] && ! command -v ghostty >/dev/null 2>&1; then
-        echo "  4. Set terminal font to 'JetBrainsMono Nerd Font' for icon support"
+        echo "  5. Set terminal font to 'JetBrainsMono Nerd Font' for icon support"
     fi
 }
 
