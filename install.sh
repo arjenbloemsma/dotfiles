@@ -216,6 +216,34 @@ setup_fedora_atomic_host() {
     echo ""
 }
 
+# Provision a macOS host for the devpod-based workflow.
+# Installs the devpod CLI via brew, points its docker provider at podman
+# (Mac uses a podman machine, not a system daemon), and sets the dotfiles
+# context options so every devcontainer gets the personal config.
+setup_macos_devpod_host() {
+    if ! podman machine list --format '{{.Name}}' 2>/dev/null | grep -q .; then
+        echo "Initializing podman machine..."
+        # Sized for parallel TS/Svelte builds and an LSP that sits at ~1-2 GiB.
+        podman machine init --cpus 4 --memory 4096 --disk-size 100
+    fi
+    if ! podman machine list --format '{{.Running}}' 2>/dev/null | grep -q true; then
+        echo "Starting podman machine..."
+        podman machine start
+    fi
+    if ! command -v devpod >/dev/null 2>&1; then
+        echo "Installing devpod via brew..."
+        brew install loft-sh/tap/devpod
+    fi
+    devpod provider add docker 2>/dev/null || true
+    devpod provider set-options docker \
+        -o DOCKER_PATH=podman >/dev/null
+    devpod context set-options \
+        -o DOTFILES_URL=https://github.com/arjenbloemsma/dotfiles \
+        -o DOTFILES_SCRIPT=scripts/devcontainer-install.sh >/dev/null
+    echo -e "${GREEN}✓${NC} macOS: devpod provisioned"
+    echo ""
+}
+
 # Install applications
 install_applications() {
     local os=$(detect_os)
@@ -308,6 +336,10 @@ install_applications() {
             else
                 echo -e "${YELLOW}⚠${NC} foot terminal not found, install via: sudo dnf install foot"
             fi
+        fi
+
+        if [[ "$os" == "macos" ]]; then
+            setup_macos_devpod_host
         fi
     fi
 
