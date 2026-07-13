@@ -22,6 +22,7 @@ INSTALL=(
     "azure-cli"
     "azure-functions-core-tools@4"
     "bat"
+    "bitwarden-cli"
     "bun"
     "fastfetch"
     "fd"
@@ -33,6 +34,8 @@ INSTALL=(
     "nvim"
     "pandoc"
     "podman"
+    # pdftotext/pdftoppm — lets tooling read PDFs
+    "poppler"
     "powershell"
     "ripgrep"
     "semgrep"
@@ -83,6 +86,12 @@ get_app_name() {
             case "$os" in
                 macos) echo "bun" ;;
                 *) ;; # installed via install script
+            esac
+            ;;
+        bitwarden-cli)
+            case "$os" in
+                macos) echo "bitwarden-cli" ;;
+                *) ;; # Linux: installed as a binary to ~/.local/bin
             esac
             ;;
         yabai) echo "koekeishiya/formulae/yabai" ;;
@@ -184,6 +193,12 @@ setup_fedora_atomic_host() {
         download_binary \
             "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64" \
             "$HOME/.local/bin/devpod"
+    fi
+    if ! command -v bw >/dev/null 2>&1; then
+        echo "Installing Bitwarden CLI to ~/.local/bin..."
+        download_zipped_binary \
+            "https://vault.bitwarden.com/download/?app=cli&platform=linux" \
+            bw "$HOME/.local/bin"
     fi
     # docker-compose v2. `podman compose` looks in ~/.docker/cli-plugins/
     # and delegates to whatever it finds there. Needed because devpod
@@ -297,6 +312,12 @@ install_applications() {
         if ! command -v bun >/dev/null 2>&1; then
             echo "Installing bun..."
             curl -fsSL https://bun.sh/install | bash
+        fi
+        if ! command -v bw >/dev/null 2>&1; then
+            echo "Installing Bitwarden CLI..."
+            download_zipped_binary \
+                "https://vault.bitwarden.com/download/?app=cli&platform=linux" \
+                bw "$HOME/.local/bin"
         fi
     fi
 
