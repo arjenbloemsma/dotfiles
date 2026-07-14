@@ -37,6 +37,7 @@ INSTALL=(
     # pdftotext/pdftoppm — lets tooling read PDFs
     "poppler"
     "powershell"
+    "rbw"
     "ripgrep"
     "semgrep"
     "sesh"
@@ -580,13 +581,14 @@ print_completion() {
 
     echo "Next steps:"
     echo "  1. Edit ~/.config/git/config.local with your git user details"
-    echo "  2. Restart your shell or run: source $rc_file"
-    echo "  3. Install tmux plugins: prefix + I (in tmux)"
+    echo "  2. Configure rbw: 'rbw config set base_url <vault-url>' and 'rbw config set email <you>', then 'rbw login'"
+    echo "  3. Restart your shell or run: source $rc_file"
+    echo "  4. Install tmux plugins: prefix + I (in tmux)"
     if command -v tailscale >/dev/null 2>&1 && ! tailscale status >/dev/null 2>&1; then
-        echo "  4. Sign into tailnet: sudo tailscale up"
+        echo "  5. Sign into tailnet: sudo tailscale up"
     fi
     if [[ "$(detect_os)" == "macos" ]] && ! command -v ghostty >/dev/null 2>&1; then
-        echo "  5. Set terminal font to 'JetBrainsMono Nerd Font' for icon support"
+        echo "  6. Set terminal font to 'JetBrainsMono Nerd Font' for icon support"
     fi
 }
 
