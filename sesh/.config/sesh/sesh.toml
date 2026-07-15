@@ -23,6 +23,12 @@ startup_command = "vi ."
 windows = [ "claude" ]
 
 [[session]]
+name = "finops azure cost reports"
+path = "~/dev/finops-azure-cost-report"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
 name = "spo provisioning engine"
 path = "~/dev/spo-provisioning-engine/functionapp"
 startup_command = "vi ."
@@ -37,6 +43,12 @@ windows = [ "claude" ]
 [[session]]
 name = "infra as code"
 path = "~/dev/infra-as-code/"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
+name = "spo maintenance"
+path = "~/dev/spo-provisioning-engine/maintenance-scripts"
 startup_command = "vi ."
 windows = [ "claude" ]
 
@@ -69,6 +81,12 @@ windows = [ "claude" ]
 [[session]]
 name = "dotfiles"
 path = "~/dotfiles/"
+startup_command = "vi ."
+windows = [ "claude" ]
+
+[[session]]
+name = "tempo timesheet importer"
+path = "~/dev/tempo-timesheet-importer/"
 startup_command = "vi ."
 windows = [ "claude" ]
 
