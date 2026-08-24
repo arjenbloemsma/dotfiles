@@ -17,6 +17,15 @@ NC='\033[0m'
 ITEM="proton-wireguard-$(hostname -s)"
 CONF_PATH="/etc/wireguard/proton.conf"
 
+# Proton's config sends everything through the tunnel, including traffic meant
+# for the tailnet, so Tailscale stops working. WireGuard cannot say "everything
+# except this", so the lists below spell out everything apart from Tailscale's
+# addresses: 100.64.0.0/10 and the private fd00::/8 block that holds
+# fd7a:115c:a1e0::/48.
+# https://tailscale.com/kb/1033/ip-and-dns-addresses
+ALLOWED_V4="0.0.0.0/2, 64.0.0.0/3, 96.0.0.0/6, 100.0.0.0/10, 100.128.0.0/9, 101.0.0.0/8, 102.0.0.0/7, 104.0.0.0/5, 112.0.0.0/4, 128.0.0.0/1"
+ALLOWED_V6="::/1, 8000::/2, c000::/3, e000::/4, f000::/5, f800::/6, fc00::/8, fe00::/7"
+
 if [[ "$(uname -s)" != "Linux" ]]; then
     echo -e "${YELLOW}skip${NC}: not Linux"
     exit 0
@@ -40,12 +49,14 @@ TMP=$(mktemp)
 chmod 600 "$TMP"
 trap 'rm -f "$TMP"' EXIT
 
-# Drop the context note the vault helper appends after a --- separator,
-# then Proton's DNS line, then blank lines.
+# Drop the context note the vault helper appends after a --- separator, then
+# Proton's DNS line, then blank lines, then replace AllowedIPs so the tunnel
+# leaves the tailnet alone.
 rbw get "$ITEM" \
     | sed '/^---$/,$d' \
     | grep -vE '^[[:space:]]*DNS[[:space:]]*=' \
-    | grep -vE '^[[:space:]]*$' > "$TMP"
+    | grep -vE '^[[:space:]]*$' \
+    | sed -E "s#^[[:space:]]*AllowedIPs[[:space:]]*=.*#AllowedIPs = ${ALLOWED_V4}, ${ALLOWED_V6}#" > "$TMP"
 
 for section in '\[Interface\]' '\[Peer\]' 'PrivateKey' 'Endpoint'; do
     if ! grep -qE "^$section" "$TMP"; then
