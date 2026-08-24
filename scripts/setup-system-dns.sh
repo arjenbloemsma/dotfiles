@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Apply privacy-respecting DNS resolvers:
-#   Quad9 (9.9.9.9, 149.112.112.112) primary, Mullvad (194.242.2.2) fallback.
+#   Quad9 (9.9.9.9, 149.112.112.112).
 # Strips DHCP-supplied DNS from every NetworkManager ethernet + wifi
 # connection so the ISP cannot inject its own resolvers.
 # Idempotent — re-running is safe and only changes what is out of spec.
@@ -35,13 +35,13 @@ if ! systemctl is-active --quiet systemd-resolved; then
     exit 1
 fi
 
-echo "Applying Quad9+Mullvad DNS on $(hostname)..."
+echo "Applying Quad9 DNS on $(hostname)..."
 
 # 1. Drop-in file
 TMP_DROP_IN=$(mktemp)
 cat > "$TMP_DROP_IN" <<'EOF'
 [Resolve]
-DNS=9.9.9.9 149.112.112.112 194.242.2.2
+DNS=9.9.9.9 149.112.112.112
 FallbackDNS=
 EOF
 
