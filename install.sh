@@ -480,6 +480,28 @@ setup_git_config() {
     echo ""
 }
 
+# The default pinentry opens a GUI window. pinentry-curses keeps the prompt in
+# the terminal.
+setup_rbw_config() {
+    command -v rbw >/dev/null 2>&1 || return
+    [[ "$(detect_os)" == "macos" ]] && return
+
+    echo "Checking rbw config..."
+
+    local want="pinentry-curses"
+    local current
+    current=$(rbw config show 2>/dev/null | grep -o '"pinentry": *"[^"]*"' | cut -d'"' -f4)
+
+    if [[ "$current" == "$want" ]]; then
+        echo -e "${GREEN}✓${NC} rbw pinentry is $want"
+    else
+        print_action "set rbw pinentry to $want" true
+        execute rbw config set pinentry "$want"
+    fi
+
+    echo ""
+}
+
 # Resolve safe conflicts and abort on anything ambiguous, BEFORE any package gets stowed.
 # Single complete picture for the user instead of a half-applied bootstrap.
 check_all_conflicts() {
@@ -636,6 +658,7 @@ main() {
     setup_git_config
     check_all_conflicts
     install_packages
+    setup_rbw_config
     install_tmux_plugins
     print_completion
 }
