@@ -480,11 +480,11 @@ setup_git_config() {
     echo ""
 }
 
-# The default pinentry opens a GUI window. pinentry-curses keeps the prompt in
-# the terminal.
+# Pin the vault prompt to the terminal. The plain pinentry binary resolves to
+# whatever is installed, which can be a GUI window.
 setup_rbw_config() {
     command -v rbw >/dev/null 2>&1 || return
-    [[ "$(detect_os)" == "macos" ]] && return
+    command -v pinentry-curses >/dev/null 2>&1 || return
 
     echo "Checking rbw config..."
 
