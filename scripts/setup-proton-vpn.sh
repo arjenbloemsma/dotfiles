@@ -54,10 +54,24 @@ chmod 600 "$TMP" "$RAW"
 trap 'rm -f "$TMP" "$RAW"' EXIT
 
 # Drop the context note the vault helper appends after a --- separator,
-# then Proton's DNS line, then blank lines.
+# then Proton's DNS line, then the IPv6 parts, then blank lines.
+#
+# IPv6 through the tunnel worked on 2026-08-25 and stopped on 2026-08-26.
+# So this is a regression on Proton's side, not a feature that never worked.
+# Retested on 2026-08-27 on both NL#848 and NL#915, which the dashboard
+# still lists as IPv6 capable, and both fail the same way. IPv4 through the
+# same tunnel is fine, the packets leave the host encrypted, and nothing
+# comes back.
+#
+# The tunnel still hands out a global IPv6 address, so software prefers IPv6
+# and stalls. Broken IPv6 is worse than none. The Address and AllowedIPs
+# lines lose their IPv6 half here so the tunnel stops claiming a route it
+# cannot carry. Host IPv6 outside the tunnel is untouched. Delete the second
+# sed to put IPv6 back once Proton fixes it.
 rbw get "$ITEM" \
     | sed '/^---$/,$d' \
     | grep -vE '^[[:space:]]*DNS[[:space:]]*=' \
+    | sed -E '/^[[:space:]]*(Address|AllowedIPs)[[:space:]]*=/ s#,[[:space:]]*[0-9a-fA-F:]+:[0-9a-fA-F:]*(/[0-9]+)?##g' \
     | grep -vE '^[[:space:]]*$' > "$RAW"
 
 # Add the tailnet rules to the end of the [Interface] section.
