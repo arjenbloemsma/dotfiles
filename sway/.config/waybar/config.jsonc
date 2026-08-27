@@ -1,0 +1,5 @@
+// Inherit the Fedora default layout, move the bar to the bottom.
+{
+    "include": ["/etc/xdg/waybar/config.jsonc"],
+    "position": "bottom"
+}

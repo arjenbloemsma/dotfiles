@@ -1,0 +1,3 @@
+# Match the desktop wallpaper (see ~/.config/sway/config.d/95-wallpaper.conf).
+image=/usr/share/backgrounds/images/default-dark-16_10.jxl
+scaling=fill

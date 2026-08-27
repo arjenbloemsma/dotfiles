@@ -1,6 +1,6 @@
 # Stow package lists.
-# - STOW_PACKAGES + STOW_PACKAGES_{MACOS,LINUX}: sourced by install.sh, stow
-#   onto the host.
+# - STOW_PACKAGES + STOW_PACKAGES_{MACOS,LINUX,SWAY}: sourced by install.sh,
+#   stow onto the host.
 # - STOW_PACKAGES_DEVCONTAINER: sourced by scripts/devcontainer-install.sh,
 #   stow inside a devpod container via devpod's dotfiles hook.
 
@@ -26,6 +26,12 @@ STOW_PACKAGES_MACOS=(
 
 STOW_PACKAGES_LINUX=(
     "bash"
+)
+
+# Only stowed when sway is installed. Holds the sway session look: window
+# colours and borders, waybar, lock screen.
+STOW_PACKAGES_SWAY=(
+    "sway"
 )
 
 STOW_PACKAGES_DEVCONTAINER=(

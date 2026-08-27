@@ -1,0 +1,65 @@
+/* Local Waybar style: dark, opaque, flat.
+ * Inherits the Fedora default and overrides only what changes. */
+@import url("file:///etc/xdg/waybar/style.css");
+
+/* Opaque dark bar instead of the half-transparent default.
+ * Divider on top, since the bar sits at the bottom of the screen. */
+window#waybar {
+    background-color: #1b1e24;
+    border-top: 3px solid #11131a;
+}
+
+/* Remove the coloured background behind each module, so they all use the
+ * bar background. The alert states listed at the bottom keep their colour,
+ * because those rules are more specific and so they win. */
+#clock,
+#battery,
+#cpu,
+#memory,
+#disk,
+#temperature,
+#backlight,
+#network,
+#pulseaudio,
+#wireplumber,
+#custom-media,
+#tray,
+#mode,
+#idle_inhibitor,
+#scratchpad,
+#power-profiles-daemon,
+#language,
+#keyboard-state,
+#privacy-item,
+#mpd {
+    background-color: transparent;
+    color: #ffffff;
+}
+
+/* These states are information, not warnings, so remove their colour too.
+ * The module icon still shows which state it is. */
+#battery.charging,
+#battery.plugged,
+#power-profiles-daemon.performance,
+#power-profiles-daemon.balanced,
+#power-profiles-daemon.power-saver,
+#privacy-item.screenshare,
+#privacy-item.audio-in,
+#privacy-item.audio-out {
+    background-color: transparent;
+    color: #ffffff;
+}
+
+/* The focused workspace and the idle-inhibit toggle get an underline
+ * instead of a coloured background. */
+#workspaces button.focused,
+#workspaces button.active,
+#idle_inhibitor.activated {
+    background-color: transparent;
+    color: #ffffff;
+    box-shadow: inset 0 -3px #ffffff;
+}
+
+/* Kept coloured: #battery.critical, #network.disconnected,
+ * #temperature.critical, #pulseaudio.muted, #wireplumber.muted,
+ * #mpd.disconnected, #workspaces button.urgent, #tray > .needs-attention */

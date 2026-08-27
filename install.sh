@@ -147,6 +147,11 @@ append_os_packages() {
         target+=("${STOW_PACKAGES_MACOS[@]}")
     else
         target+=("${STOW_PACKAGES_LINUX[@]}")
+        # Only add the sway package if sway is installed. Checking for the
+        # binary is more reliable than checking the distro.
+        if command -v sway >/dev/null 2>&1; then
+            target+=("${STOW_PACKAGES_SWAY[@]}")
+        fi
     fi
 }
 
