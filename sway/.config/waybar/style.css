@@ -2,11 +2,10 @@
  * Inherits the Fedora default and overrides only what changes. */
 @import url("file:///etc/xdg/waybar/style.css");
 
-/* Opaque dark bar instead of the half-transparent default.
- * Divider on top, since the bar sits at the bottom of the screen. */
+/* Opaque dark bar instead of the half-transparent default. */
 window#waybar {
     background-color: #1b1e24;
-    border-top: 3px solid #11131a;
+    border-bottom: 3px solid #11131a;
 }
 
 /* Remove the coloured background behind each module, so they all use the
