@@ -29,6 +29,15 @@ TAILNET_RULES=(
     "PostDown = ip -6 rule del to fd7a:115c:a1e0::/48 lookup 52 priority 5000 || true"
 )
 
+# The config has no IPv6, so IPv6 would go around the tunnel and show the
+# real address. This route blocks it and programs fall back to IPv4 at once.
+# Tailnet IPv6 still works, its rule is read first. Remove when the config
+# carries IPv6 again.
+IPV6_BLACKHOLE_RULES=(
+    "PostUp = ip -6 route add blackhole default metric 1 || true"
+    "PostDown = ip -6 route del blackhole default metric 1 || true"
+)
+
 if [[ "$(uname -s)" != "Linux" ]]; then
     echo -e "${YELLOW}skip${NC}: not Linux"
     exit 0
@@ -56,28 +65,21 @@ trap 'rm -f "$TMP" "$RAW"' EXIT
 # Drop the context note the vault helper appends after a --- separator,
 # then Proton's DNS line, then the IPv6 parts, then blank lines.
 #
-# IPv6 through the tunnel worked on 2026-08-25 and stopped on 2026-08-26.
-# So this is a regression on Proton's side, not a feature that never worked.
-# Retested on 2026-08-27 on both NL#848 and NL#915, which the dashboard
-# still lists as IPv6 capable, and both fail the same way. IPv4 through the
-# same tunnel is fine, the packets leave the host encrypted, and nothing
-# comes back.
-#
-# The tunnel still hands out a global IPv6 address, so software prefers IPv6
-# and stalls. Broken IPv6 is worse than none. The Address and AllowedIPs
-# lines lose their IPv6 half here so the tunnel stops claiming a route it
-# cannot carry. Host IPv6 outside the tunnel is untouched. Delete the second
-# sed to put IPv6 back once Proton fixes it.
+# IPv6 in the tunnel worked on 2026-08-25 and broke on the 26th. Tested
+# NL#848 and NL#915, both fail, so it is Proton's side. The tunnel still
+# gave out an IPv6 address, so programs tried IPv6 and hung. Drop the second
+# sed and the blackhole rules above when Proton fixes it.
 rbw get "$ITEM" \
     | sed '/^---$/,$d' \
     | grep -vE '^[[:space:]]*DNS[[:space:]]*=' \
     | sed -E '/^[[:space:]]*(Address|AllowedIPs)[[:space:]]*=/ s#,[[:space:]]*[0-9a-fA-F:]+:[0-9a-fA-F:]*(/[0-9]+)?##g' \
     | grep -vE '^[[:space:]]*$' > "$RAW"
 
-# Add the tailnet rules to the end of the [Interface] section.
+# Add the tailnet and blackhole rules to the end of the [Interface] section.
 {
     sed '/^\[Peer\]/,$d' "$RAW"
     printf '%s\n' "${TAILNET_RULES[@]}"
+    printf '%s\n' "${IPV6_BLACKHOLE_RULES[@]}"
     sed -n '/^\[Peer\]/,$p' "$RAW"
 } > "$TMP"
 
