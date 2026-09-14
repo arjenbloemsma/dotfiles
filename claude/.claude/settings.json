@@ -4,6 +4,24 @@
       "Bash(echo:*)"
     ],
     "deny": [],
-    "ask": []
-  }
+    "ask": [],
+    "defaultMode": "default"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          { "type": "command", "command": "bash \"$HOME/dotfiles/claude/.claude/hooks/block-secret-read.sh\"" }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "bash \"$HOME/dotfiles/claude/.claude/hooks/block-inline-secret-bash.sh\"" }
+        ]
+      }
+    ]
+  },
+  "theme": "dark"
 }
