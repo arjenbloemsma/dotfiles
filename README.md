@@ -9,11 +9,11 @@ into the package; restow refreshes them.
 
 - macOS: full support
 - Ubuntu/Debian: full support (Homebrew on Linux for CLI tools)
-- Fedora Atomic: host stays minimal (rpm-ostree layering for tmux,
-  stow, syncthing, tailscale, rbw, neovim, wireguard-tools); user-space
-  host tools (starship, devpod, docker-compose v2) install to
-  `~/.local/bin` and `~/.docker/cli-plugins/`; per-project dev
-  environments via devpod (`devpod up <repo>`)
+- Fedora Atomic: host stays minimal (rpm-ostree layers the host packages
+  missing from the base image: tmux, stow, syncthing, tailscale, rbw,
+  neovim, wireguard-tools). User-space host tools (starship, devpod,
+  docker-compose v2) go to `~/.local/bin` and `~/.docker/cli-plugins/`.
+  Per-project dev environments via devpod (`devpod up <repo>`)
 - Arch: partial. Bootstrap works, but some CLI/GUI names in
   `install.sh` are brew/cask names that don't map cleanly to AUR
 
@@ -111,14 +111,14 @@ top of the script.
 
 ### Fedora Atomic
 
-On first run, bootstrap layers minimal host packages (tmux, stow,
-syncthing, tailscale, rbw, neovim, wireguard-tools) via `rpm-ostree`
-and **exits**. The layered packages are only available after reboot,
-so the rest of the install (stow) can't proceed yet. After reboot,
-`install.sh` provisions the devpod runtime: starship, devpod, and
-Docker Compose v2 land in `~/.local/bin` and `~/.docker/cli-plugins/`;
-the rootless podman user socket is enabled; devpod's docker provider
-is configured to use podman.
+On first run, bootstrap checks for the host packages (tmux, stow,
+syncthing, tailscale, rbw, neovim, wireguard-tools), layers whatever is
+missing via `rpm-ostree` and **exits**. Layered packages are only
+available after reboot, so the rest of the install (stow) can't proceed
+yet. After reboot, `install.sh` provisions the devpod runtime:
+starship, devpod, and Docker Compose v2 land in `~/.local/bin` and
+`~/.docker/cli-plugins/`; the rootless podman user socket is enabled;
+devpod's docker provider is configured to use podman.
 
 ```bash
 # First run: layers packages, then exits
