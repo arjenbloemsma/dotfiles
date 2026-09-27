@@ -29,7 +29,7 @@ STOW_PACKAGES_LINUX=(
 )
 
 # Only stowed when sway is installed. Holds the sway session look: window
-# colours and borders, waybar, lock screen.
+# colours and borders, waybar, lock screen, GTK dark mode.
 STOW_PACKAGES_SWAY=(
     "sway"
 )

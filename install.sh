@@ -507,6 +507,29 @@ setup_rbw_config() {
     echo ""
 }
 
+# Dark mode for GTK4 and libadwaita apps, which read this through the desktop
+# portal. GTK3 apps read the stowed gtk-3.0/settings.ini instead.
+setup_dark_mode() {
+    command -v gsettings >/dev/null 2>&1 || return
+
+    echo "Checking dark mode..."
+
+    local schema="org.gnome.desktop.interface"
+    local key value
+    for key in color-scheme:prefer-dark gtk-theme:Adwaita-dark; do
+        value="${key#*:}"
+        key="${key%%:*}"
+        if [[ "$(gsettings get "$schema" "$key" 2>/dev/null)" == "'$value'" ]]; then
+            echo -e "${GREEN}✓${NC} $key is $value"
+        else
+            print_action "set $key to $value" true
+            execute gsettings set "$schema" "$key" "$value"
+        fi
+    done
+
+    echo ""
+}
+
 # Resolve safe conflicts and abort on anything ambiguous, BEFORE any package gets stowed.
 # Single complete picture for the user instead of a half-applied bootstrap.
 check_all_conflicts() {
@@ -664,6 +687,7 @@ main() {
     check_all_conflicts
     install_packages
     setup_rbw_config
+    setup_dark_mode
     install_tmux_plugins
     print_completion
 }
