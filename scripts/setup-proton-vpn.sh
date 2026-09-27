@@ -5,7 +5,7 @@
 # setup-system-dns.sh.
 # Idempotent — re-running is safe and only changes what is out of spec.
 # Run with: ~/dotfiles/scripts/setup-proton-vpn.sh
-# Then bring the tunnel up with: sudo wg-quick up proton
+# Then bring the tunnel up with: sudo systemctl start wg-quick@proton
 
 set -euo pipefail
 
@@ -97,9 +97,9 @@ else
     sudo install -D -m 600 -o root -g root "$TMP" "$CONF_PATH"
     if wg show proton >/dev/null 2>&1; then
         echo -e "${YELLOW}→${NC} tunnel is running with the old config; restart it:"
-        echo "    sudo wg-quick down proton && sudo wg-quick up proton"
+        echo "    sudo systemctl restart wg-quick@proton"
     fi
 fi
 
 echo
-echo -e "${GREEN}✓${NC} bring the tunnel up with: sudo wg-quick up proton"
+echo -e "${GREEN}✓${NC} bring the tunnel up with: sudo systemctl start wg-quick@proton"
