@@ -135,6 +135,20 @@ setup_system_dns() {
     fi
 }
 
+# Give the login greeter the dark wallpaper (Linux only)
+setup_sddm_theme() {
+    local os
+    os=$(detect_os)
+    [[ "$os" == "macos" ]] && return 0
+
+    local sddm_script="$DOTFILES_DIR/scripts/setup-sddm-theme.sh"
+    if [[ -x "$sddm_script" ]]; then
+        echo "Setting the login greeter background..."
+        "$sddm_script"
+        echo ""
+    fi
+}
+
 # Run install script
 run_install() {
     cd "$DOTFILES_DIR"
@@ -158,6 +172,7 @@ main() {
     clone_dotfiles
     mkdir -p "$HOME/dev"
     setup_system_dns
+    setup_sddm_theme
     run_install "$@"
 
     echo ""
