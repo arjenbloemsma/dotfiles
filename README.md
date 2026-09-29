@@ -49,7 +49,8 @@ For a temp or exploration machine. Installs syncthing via the native package
 manager, creates `~/notes-vault`, starts the service, pairs with the
 always-on hub, and shares the `notes-vault` folder with it. No
 full dotfiles install. Works on bare macOS (requires brew), Debian/Ubuntu,
-Arch, Fedora.
+Arch, Fedora. On Fedora Atomic it layers syncthing and stops for a reboot,
+so run it again afterwards.
 
 The script needs the hub's device ID, supplied via either a config
 file or an env var. Device IDs leak IPs through the public discovery

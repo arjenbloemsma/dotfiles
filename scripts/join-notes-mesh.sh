@@ -60,7 +60,14 @@ require_pkg_manager() {
         macos)         check_pkg_manager brew "install brew first or run bootstrap.sh" ;;
         ubuntu|debian) check_pkg_manager apt-get ;;
         arch)          check_pkg_manager pacman ;;
-        fedora)        check_pkg_manager dnf ;;
+        fedora)
+            # Atomic variants ship rpm-ostree instead of dnf.
+            if command -v rpm-ostree >/dev/null 2>&1; then
+                check_pkg_manager rpm-ostree
+            else
+                check_pkg_manager dnf
+            fi
+            ;;
         *)
             echo -e "${RED}✗${NC} Unsupported OS: $os (supported: macos, ubuntu, debian, arch, fedora)"
             exit 1
@@ -104,12 +111,24 @@ install_syncthing() {
         return
     fi
 
+    require_pkg_manager "$os"
+
     echo -e "${YELLOW}→${NC} Installing syncthing..."
     case "$os" in
         macos)        brew install syncthing ;;
         ubuntu|debian) sudo apt-get update && sudo apt-get install -y syncthing ;;
         arch)         sudo pacman -S --noconfirm syncthing ;;
-        fedora)       sudo dnf install -y syncthing ;;
+        fedora)
+            # Atomic: layering needs a reboot before the binary is on PATH,
+            # so stop here. --idempotent keeps a re-run before that reboot
+            # from layering twice.
+            if command -v rpm-ostree >/dev/null 2>&1; then
+                sudo rpm-ostree install --idempotent syncthing
+                echo -e "${YELLOW}→${NC} reboot, then run this script again"
+                exit 0
+            fi
+            sudo dnf install -y syncthing
+            ;;
     esac
     echo -e "${GREEN}✓${NC} syncthing installed"
 }
@@ -258,7 +277,6 @@ main() {
     echo "Detected OS: $os"
     echo ""
 
-    require_pkg_manager "$os"
     load_peers
     install_syncthing "$os"
     create_vault
