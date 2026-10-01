@@ -20,6 +20,10 @@
 --   <leader>zt - Open interactive tag browser
 --   gf         - Go to file with markdown #heading support
 
+if vim.g.in_container then
+  return {}
+end
+
 return {
   -- Extend telescope with custom zettelkasten commands
   "nvim-telescope/telescope.nvim",
