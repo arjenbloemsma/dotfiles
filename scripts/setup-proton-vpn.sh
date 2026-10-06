@@ -33,9 +33,9 @@ TAILNET_RULES=(
 # real address. This route blocks it and programs fall back to IPv4 at once.
 # Tailnet IPv6 still works, its rule is read first. Remove when the config
 # carries IPv6 again.
-IPV6_BLACKHOLE_RULES=(
-    "PostUp = ip -6 route add blackhole default metric 1 || true"
-    "PostDown = ip -6 route del blackhole default metric 1 || true"
+IPV6_UNREACHABLE_RULES=(
+    "PostUp = ip -6 route add unreachable default metric 1 || true"
+    "PostDown = ip -6 route del unreachable default metric 1 || true"
 )
 
 if [[ "$(uname -s)" != "Linux" ]]; then
@@ -68,18 +68,18 @@ trap 'rm -f "$TMP" "$RAW"' EXIT
 # IPv6 in the tunnel worked on 2026-08-25 and broke on the 26th. Tested
 # NL#848 and NL#915, both fail, so it is Proton's side. The tunnel still
 # gave out an IPv6 address, so programs tried IPv6 and hung. Drop the second
-# sed and the blackhole rules above when Proton fixes it.
+# sed and the IPv6 rules above when Proton fixes it.
 rbw get "$ITEM" \
     | sed '/^---$/,$d' \
     | grep -vE '^[[:space:]]*DNS[[:space:]]*=' \
     | sed -E '/^[[:space:]]*(Address|AllowedIPs)[[:space:]]*=/ s#,[[:space:]]*[0-9a-fA-F:]+:[0-9a-fA-F:]*(/[0-9]+)?##g' \
     | grep -vE '^[[:space:]]*$' > "$RAW"
 
-# Add the tailnet and blackhole rules to the end of the [Interface] section.
+# Add the tailnet and IPv6 rules to the end of the [Interface] section.
 {
     sed '/^\[Peer\]/,$d' "$RAW"
     printf '%s\n' "${TAILNET_RULES[@]}"
-    printf '%s\n' "${IPV6_BLACKHOLE_RULES[@]}"
+    printf '%s\n' "${IPV6_UNREACHABLE_RULES[@]}"
     sed -n '/^\[Peer\]/,$p' "$RAW"
 } > "$TMP"
 
