@@ -3,7 +3,17 @@
     "allow": [
       "Bash(echo:*)"
     ],
-    "deny": [],
+    "deny": [
+      "DesignSync",
+      "NotebookEdit",
+      "SendMessage",
+      "PushNotification",
+      "RemoteTrigger",
+      "ScheduleWakeup",
+      "CronCreate",
+      "CronDelete",
+      "CronList"
+    ],
     "ask": [],
     "defaultMode": "default"
   },
@@ -20,8 +30,23 @@
         "hooks": [
           { "type": "command", "command": "bash \"$HOME/dotfiles/claude/.claude/hooks/block-inline-secret-bash.sh\"" }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "bash \"$HOME/dotfiles/claude/.claude/hooks/block-em-dash-write.sh\"" }
+        ]
       }
     ]
   },
+  "disableWorkflows": true,
+  "disableRemoteControl": true,
+  "disableClaudeAiConnectors": true,
+  "disableArtifact": true,
+  "skillOverrides": {
+    "anthropic-skills:google-workspace": "off",
+    "anthropic-skills:chrome-browser": "off"
+  },
+  "outputStyle": "Concise",
   "theme": "dark"
 }
