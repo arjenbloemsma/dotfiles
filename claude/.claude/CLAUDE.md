@@ -1,10 +1,7 @@
-# CLAUDE.md - v2.0
+# CLAUDE.md - v3.0
 
-## Rules
-1. Mention path + version at start
-2. Be extremely concise. Sacrifice grammar for concision.
-
-## Defaults
 - Use `bun` (not npm). `bun run test` not `bun test`
-- Track feature progress in `.md` files with `← RESUME HERE` marker
-- Update progress file at least once per day, always at end of day
+- Copy between machines with `rsync`, not `scp`
+- Commit through the `/commit` skill, straight to trunk
+- Fix the specific issue minimally. Don't rewrite or restructure
+- Track feature progress in `.md` files with a `← RESUME HERE` marker
