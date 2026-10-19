@@ -233,6 +233,7 @@ setup_fedora_atomic_host() {
     devpod context set-options \
         -o DOTFILES_URL=https://github.com/arjenbloemsma/dotfiles \
         -o DOTFILES_SCRIPT=scripts/devcontainer-install.sh >/dev/null
+    "$DOTFILES_DIR/scripts/setup-time-sync.sh"
     echo -e "${GREEN}✓${NC} Fedora Atomic: host provisioned (per-project dev envs via devpod)"
     echo ""
 }
