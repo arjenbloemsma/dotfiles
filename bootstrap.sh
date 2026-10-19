@@ -39,7 +39,7 @@ install_prerequisites() {
                 echo -e "${YELLOW}→${NC} Installing Homebrew..."
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
             fi
-            brew install git stow
+            brew install bash git stow
             ;;
         ubuntu|debian)
             # Install build essentials and curl for Homebrew

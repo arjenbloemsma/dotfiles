@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+# macOS ships bash 3.2, this script needs 4.3+ (local -n, ${var,,}).
+# Re-run under Homebrew's bash, which bootstrap.sh installs.
+if (( BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 3) )); then
+    for newer_bash in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+        [[ -x "$newer_bash" ]] && exec "$newer_bash" "$0" "$@"
+    done
+    echo "bash 4.3+ required, install it with: brew install bash" >&2
+    exit 1
+fi
+
 set -euo pipefail
 
 # Colors
@@ -64,6 +74,7 @@ APPS=(
     "ghostty"
     "microsoft-azure-storage-explorer"
     "pgadmin4"
+    "protonvpn"
     "tailscale"
     "vlc"
 )
@@ -95,6 +106,7 @@ get_app_name() {
                 *) ;; # Linux: installed as a binary to ~/.local/bin
             esac
             ;;
+        ghostty) ;; # cask, installed with APPS
         yabai) echo "koekeishiya/formulae/yabai" ;;
         skhd) echo "koekeishiya/formulae/skhd" ;;
         azure-functions-core-tools@4) echo "azure/functions/azure-functions-core-tools@4" ;;
@@ -105,7 +117,9 @@ get_app_name() {
 # Execute or dry-run a command
 execute() {
     if [[ "$DRY_RUN" == true ]]; then
-        [[ "$VERBOSE" == true ]] && echo -e "${BLUE}→${NC} Would run: $*"
+        if [[ "$VERBOSE" == true ]]; then
+            echo -e "${BLUE}→${NC} Would run: $*"
+        fi
     else
         "$@"
     fi
@@ -165,7 +179,8 @@ check_prerequisites() {
     command -v stow >/dev/null 2>&1 || { echo -e "${RED}✗${NC} stow not installed"; exit 1; }
     echo -e "${GREEN}✓${NC} stow"
 
-    if command -v brew >/dev/null 2>&1; then
+    if [[ "$(detect_os)" == "macos" ]]; then
+        command -v brew >/dev/null 2>&1 || { echo -e "${RED}✗${NC} homebrew not installed"; exit 1; }
         echo -e "${GREEN}✓${NC} homebrew"
     fi
 
@@ -266,6 +281,20 @@ setup_macos_devpod_host() {
     echo ""
 }
 
+# Print the given brew formulae or casks that are not installed yet.
+missing_brew() {
+    local kind=$1
+    shift
+    local installed name
+    local -a missing=()
+    installed=" $(brew list "--$kind" -1 | tr '\n' ' ') "
+    for name in "$@"; do
+        # Tap formulae (owner/tap/name) are listed by their last part
+        [[ "$installed" == *" ${name##*/} "* ]] || missing+=("$name")
+    done
+    echo "${missing[*]:-nothing}"
+}
+
 # Install applications
 install_applications() {
     local os=$(detect_os)
@@ -289,8 +318,8 @@ install_applications() {
     done
 
     if [[ "$DRY_RUN" == true ]]; then
-        echo -e "${BLUE}→${NC} Would install formulae: ${formulae[*]}"
-        echo -e "${BLUE}→${NC} Would install apps: ${APPS[*]}"
+        echo -e "${BLUE}→${NC} Would install formulae: $(missing_brew formula "${formulae[@]}")"
+        echo -e "${BLUE}→${NC} Would install apps: $(missing_brew cask "${APPS[@]}")"
         echo ""
         return
     fi
