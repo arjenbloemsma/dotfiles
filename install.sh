@@ -547,7 +547,8 @@ setup_rbw_config() {
 
     local want="pinentry-curses"
     local current
-    current=$(rbw config show 2>/dev/null | grep -o '"pinentry": *"[^"]*"' | cut -d'"' -f4)
+    # A fresh rbw has no config file, so show fails; that means nothing is set
+    current=$(rbw config show 2>/dev/null | grep -o '"pinentry": *"[^"]*"' | cut -d'"' -f4) || current=""
 
     if [[ "$current" == "$want" ]]; then
         echo -e "${GREEN}✓${NC} rbw pinentry is $want"
@@ -623,7 +624,8 @@ login_vault() {
 
     local base_url="https://vault.bloemium.ninja"
     local config email
-    config=$(rbw config show 2>/dev/null)
+    # A fresh rbw has no config file, so show fails; that means nothing is set
+    config=$(rbw config show 2>/dev/null) || config=""
     if [[ "$(grep -o '"base_url": *"[^"]*"' <<<"$config" | cut -d'"' -f4)" != "$base_url" ]]; then
         print_action "set rbw base_url to $base_url" true
         rbw config set base_url "$base_url"
