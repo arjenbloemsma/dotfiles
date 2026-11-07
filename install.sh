@@ -194,6 +194,11 @@ check_prerequisites() {
 # ~/.docker/cli-plugins/. Per-project dev environments live in each
 # repo's .devcontainer/ and run via `devpod up <repo>`.
 setup_fedora_atomic_host() {
+    if [[ "$DRY_RUN" == true ]]; then
+        echo -e "${BLUE}→${NC} Would install starship, devpod, bw and docker-compose, enable podman and tailscaled, and set the time servers"
+        echo ""
+        return
+    fi
     mkdir -p "$HOME/.local/bin"
     if ! command -v starship >/dev/null 2>&1; then
         echo "Installing starship to ~/.local/bin..."
@@ -253,6 +258,21 @@ setup_fedora_atomic_host() {
     echo ""
 }
 
+# Provision an Omarchy host. Omarchy ships its own desktop and dev tools;
+# host packages come from pacman in bootstrap.sh.
+setup_omarchy_host() {
+    if [[ "$DRY_RUN" == true ]]; then
+        echo -e "${BLUE}→${NC} Would enable sshd and tailscaled, and set the time servers"
+        echo ""
+        return
+    fi
+    sudo systemctl enable --now sshd >/dev/null
+    sudo systemctl enable --now tailscaled >/dev/null
+    "$DOTFILES_DIR/scripts/setup-time-sync.sh"
+    echo -e "${GREEN}✓${NC} Omarchy: host provisioned"
+    echo ""
+}
+
 # Provision a macOS host for the devpod-based workflow.
 # Installs the devpod CLI via brew, points its docker provider at podman
 # (Mac uses a podman machine, not a system daemon), and sets the dotfiles
@@ -309,6 +329,11 @@ install_applications() {
         return
     fi
 
+    if [[ "$os" == "omarchy" ]]; then
+        setup_omarchy_host
+        return
+    fi
+
     echo "Installing applications for $os..."
 
     for package in "${packages[@]}"; do
@@ -333,9 +358,6 @@ install_applications() {
                 echo -e "${YELLOW}⚠${NC} Homebrew not found, skipping"
                 return
             fi
-            ;;
-        arch)
-            yay -S --noconfirm "${formulae[@]}"
             ;;
         *)
             echo -e "${YELLOW}⚠${NC} Unknown OS, skipping"
@@ -537,6 +559,115 @@ setup_rbw_config() {
     echo ""
 }
 
+# Join the tailnet, limit SSH to it, log in to Vaultwarden and start Proton VPN
+# on boot. Each step needs the one before: Vaultwarden is only reachable over
+# the tailnet, and the Proton config comes from Vaultwarden.
+# Fedora Atomic and Omarchy only. Each step skips what is already done.
+setup_network_access() {
+    local os
+    os=$(detect_os)
+    if [[ "$os" != "omarchy" ]] && ! [[ "$os" == "fedora" && -f /run/ostree-booted ]]; then
+        return 0
+    fi
+    [[ "$DRY_RUN" == true ]] && return 0
+
+    join_tailnet
+    restrict_ssh_to_tailnet
+    login_vault
+    start_proton_vpn
+}
+
+join_tailnet() {
+    echo "Checking tailnet..."
+
+    if tailscale status >/dev/null 2>&1; then
+        echo -e "${GREEN}✓${NC} on the tailnet"
+    else
+        echo -e "${YELLOW}→${NC} joining the tailnet, open the printed URL to log in"
+        if ! sudo tailscale up; then
+            echo -e "${RED}✗${NC} could not join the tailnet" >&2
+            exit 1
+        fi
+    fi
+
+    echo ""
+}
+
+# Accept SSH only over the tailnet. Only hosts with ufw (Omarchy).
+restrict_ssh_to_tailnet() {
+    command -v ufw >/dev/null 2>&1 || return 0
+
+    echo "Checking SSH firewall rules..."
+
+    local rules rule
+    rules=$(sudo ufw show added)
+    if [[ "$rules" != *"allow in on tailscale0 to any port 22 proto tcp"* ]]; then
+        print_action "allow SSH on tailscale0" true
+        sudo ufw allow in on tailscale0 to any port 22 proto tcp >/dev/null
+    fi
+    # Remove every other rule that opens port 22
+    while IFS= read -r rule; do
+        print_action "remove rule: $rule" true
+        # shellcheck disable=SC2086 # the rule is split into ufw arguments
+        sudo ufw delete ${rule#ufw } >/dev/null
+    done < <(grep -E '^ufw (allow|limit) (.* )?((22|ssh|SSH|OpenSSH)(/tcp)?|port 22)( |$)' <<<"$rules" \
+        | grep -v 'tailscale0' || true)
+
+    echo -e "${GREEN}✓${NC} SSH only on tailscale0"
+    echo ""
+}
+
+# Point rbw at Vaultwarden and log in. Asks for the email once.
+login_vault() {
+    echo "Checking Vaultwarden login..."
+
+    local base_url="https://vault.bloemium.ninja"
+    local config email
+    config=$(rbw config show 2>/dev/null)
+    if [[ "$(grep -o '"base_url": *"[^"]*"' <<<"$config" | cut -d'"' -f4)" != "$base_url" ]]; then
+        print_action "set rbw base_url to $base_url" true
+        rbw config set base_url "$base_url"
+    fi
+    if ! grep -q '"email": *"[^"]' <<<"$config"; then
+        while [[ -z "${email:-}" ]]; do
+            read -r -p "Vaultwarden email: " email </dev/tty
+        done
+        rbw config set email "$email"
+    fi
+    if ! rbw unlocked >/dev/null 2>&1; then
+        if ! { rbw login && rbw unlock; }; then
+            echo -e "${RED}✗${NC} could not log in to Vaultwarden" >&2
+            exit 1
+        fi
+    fi
+
+    echo -e "${GREEN}✓${NC} Vaultwarden unlocked"
+    echo ""
+}
+
+# Install this host's Proton config from the vault and start it on boot.
+start_proton_vpn() {
+    local item
+    item="proton-wireguard-$(hostname -s)"
+
+    echo "Checking Proton VPN..."
+
+    if ! rbw sync; then
+        echo -e "${RED}✗${NC} could not sync with Vaultwarden" >&2
+        exit 1
+    fi
+    if ! rbw get "$item" >/dev/null 2>&1; then
+        echo -e "${RED}✗${NC} vault item $item not found" >&2
+        echo "    Create a WireGuard config in the Proton dashboard, store it as $item and re-run." >&2
+        exit 1
+    fi
+
+    "$DOTFILES_DIR/scripts/setup-proton-vpn.sh"
+    sudo systemctl enable --now wg-quick@proton >/dev/null
+    echo -e "${GREEN}✓${NC} Proton VPN starts on boot"
+    echo ""
+}
+
 # Dark mode for GTK4 and libadwaita apps, which read this through the desktop
 # portal. GTK3 apps read the stowed gtk-3.0/settings.ini instead.
 setup_dark_mode() {
@@ -717,6 +848,7 @@ main() {
     check_all_conflicts
     install_packages
     setup_rbw_config
+    setup_network_access
     setup_dark_mode
     install_tmux_plugins
     print_completion

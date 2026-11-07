@@ -13,6 +13,9 @@ NC='\033[0m'
 DOTFILES_REPO="https://github.com/arjenbloemsma/dotfiles.git"
 DOTFILES_DIR="$HOME/dotfiles"
 
+# Host packages for the Linux desktops; names are the same on Fedora and Omarchy
+HOST_PACKAGES=(tmux stow syncthing tailscale rbw neovim wireguard-tools)
+
 # Detect OS and package manager
 detect_os() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -62,38 +65,26 @@ install_prerequisites() {
             # Fedora Atomic: layer host-only packages. If any are missing, layer
             # them all (rpm-ostree is idempotent) and exit so the user reboots.
             # On the next run all packages pass the check and bootstrap continues.
-            local layered=(tmux stow syncthing tailscale rbw neovim wireguard-tools)
             local missing=()
             local pkg
-            for pkg in "${layered[@]}"; do
+            for pkg in "${HOST_PACKAGES[@]}"; do
                 rpm -q "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
             done
             if (( ${#missing[@]} > 0 )); then
-                rpm-ostree install --idempotent "${layered[@]}"
+                rpm-ostree install --idempotent "${HOST_PACKAGES[@]}"
                 echo ""
                 echo -e "${YELLOW}→${NC} Layered packages installed (missing: ${missing[*]})."
                 echo -e "${YELLOW}→${NC} Reboot now (sudo systemctl reboot), then re-run this bootstrap."
                 exit 0
             fi
             ;;
-        arch)
-            # Install base packages with pacman
-            sudo pacman -S --noconfirm git stow base-devel
-
-            # Install yay if not present
-            if ! command -v yay >/dev/null 2>&1; then
-                echo -e "${YELLOW}→${NC} Installing yay..."
-                git clone https://aur.archlinux.org/yay.git /tmp/yay
-                cd /tmp/yay
-                makepkg -si --noconfirm
-                cd -
-                rm -rf /tmp/yay
-                echo -e "${GREEN}✓${NC} yay installed"
-            fi
+        omarchy)
+            # --needed skips what Omarchy already ships
+            sudo pacman -S --needed --noconfirm "${HOST_PACKAGES[@]}"
             ;;
         *)
             echo -e "${RED}✗${NC} Unsupported OS: $os"
-            echo "Supported: macOS, Ubuntu, Fedora Atomic, Arch"
+            echo "Supported: macOS, Fedora Atomic, Omarchy, Ubuntu"
             exit 1
             ;;
     esac
@@ -135,11 +126,10 @@ setup_system_dns() {
     fi
 }
 
-# Give the login greeter the dark wallpaper (Linux only)
+# Give the login greeter the dark wallpaper (Fedora Sway only)
 setup_sddm_theme() {
-    local os
-    os=$(detect_os)
-    [[ "$os" == "macos" ]] && return 0
+    [[ "$(detect_os)" == "fedora" ]] || return 0
+    command -v sway >/dev/null 2>&1 || return 0
 
     local sddm_script="$DOTFILES_DIR/scripts/setup-sddm-theme.sh"
     if [[ -x "$sddm_script" ]]; then

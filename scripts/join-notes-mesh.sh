@@ -9,7 +9,7 @@
 # - Adds each peer as a remote device and shares notes-vault with each
 # - Prints device ID + Web UI URL so a peer can accept the pairing
 #
-# Safe to re-run. Works on macOS (requires brew), Debian/Ubuntu, Arch, Fedora.
+# Safe to re-run. Works on macOS (requires brew), Debian/Ubuntu, Omarchy, Fedora.
 
 set -e
 
@@ -59,7 +59,7 @@ require_pkg_manager() {
     case "$os" in
         macos)         check_pkg_manager brew "install brew first or run bootstrap.sh" ;;
         ubuntu|debian) check_pkg_manager apt-get ;;
-        arch)          check_pkg_manager pacman ;;
+        omarchy)       check_pkg_manager pacman ;;
         fedora)
             # Atomic variants ship rpm-ostree instead of dnf.
             if command -v rpm-ostree >/dev/null 2>&1; then
@@ -69,7 +69,7 @@ require_pkg_manager() {
             fi
             ;;
         *)
-            echo -e "${RED}✗${NC} Unsupported OS: $os (supported: macos, ubuntu, debian, arch, fedora)"
+            echo -e "${RED}✗${NC} Unsupported OS: $os (supported: macos, ubuntu, debian, omarchy, fedora)"
             exit 1
             ;;
     esac
@@ -117,7 +117,7 @@ install_syncthing() {
     case "$os" in
         macos)        brew install syncthing ;;
         ubuntu|debian) sudo apt-get update && sudo apt-get install -y syncthing ;;
-        arch)         sudo pacman -S --noconfirm syncthing ;;
+        omarchy)      sudo pacman -S --needed --noconfirm syncthing ;;
         fedora)
             # Atomic: layering needs a reboot before the binary is on PATH,
             # so stop here. --idempotent keeps a re-run before that reboot
@@ -154,7 +154,7 @@ start_syncthing() {
                 echo -e "${GREEN}✓${NC} syncthing started via brew services"
             fi
             ;;
-        ubuntu|debian|arch|fedora)
+        ubuntu|debian|omarchy|fedora)
             if ! systemctl --user >/dev/null 2>&1; then
                 echo -e "${YELLOW}⚠${NC} systemd user session unavailable — falling back to background process"
                 if pgrep -u "$USER" -x syncthing >/dev/null; then

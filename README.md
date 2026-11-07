@@ -14,8 +14,8 @@ into the package; restow refreshes them.
   neovim, wireguard-tools). User-space host tools (starship, devpod,
   docker-compose v2) go to `~/.local/bin` and `~/.docker/cli-plugins/`.
   Per-project dev environments via devpod (`devpod up <repo>`)
-- Arch: partial. Bootstrap works, but some CLI/GUI names in
-  `install.sh` are brew/cask names that don't map cleanly to AUR
+- Omarchy: pacman installs the same host packages as Fedora Atomic.
+  Omarchy's own desktop and dev tools stay as shipped
 
 Plain Fedora (non-Atomic) is not supported.
 
@@ -25,7 +25,6 @@ Plain Fedora (non-Atomic) is not supported.
 
 Requires `curl`. Install first if missing:
 - Ubuntu/Debian: `sudo apt-get update && sudo apt install -y curl`
-- Arch: `sudo pacman -S curl`
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/arjenbloemsma/dotfiles/trunk/bootstrap.sh)
@@ -49,7 +48,7 @@ For a temp or exploration machine. Installs syncthing via the native package
 manager, creates `~/notes-vault`, starts the service, pairs with the
 always-on hub, and shares the `notes-vault` folder with it. No
 full dotfiles install. Works on bare macOS (requires brew), Debian/Ubuntu,
-Arch, Fedora. On Fedora Atomic it layers syncthing and stops for a reboot,
+Omarchy, Fedora. On Fedora Atomic it layers syncthing and stops for a reboot,
 so run it again afterwards.
 
 The script needs the hub's device ID, supplied via either a config
