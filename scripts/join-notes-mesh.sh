@@ -101,8 +101,14 @@ load_peers() {
 
     # Vault item body: one "ID|name" per line, then the context note after ---
     local line
-    if command -v rbw >/dev/null 2>&1 && rbw unlocked >/dev/null 2>&1 \
-        && rbw get "$VAULT_ITEM" >/dev/null 2>&1; then
+    if command -v rbw >/dev/null 2>&1; then
+        rbw unlocked >/dev/null 2>&1 || rbw unlock
+        # The local copy only has items from the last sync
+        rbw sync
+        if ! rbw get "$VAULT_ITEM" >/dev/null 2>&1; then
+            echo -e "${RED}✗${NC} vault item $VAULT_ITEM not found"
+            exit 1
+        fi
         while IFS= read -r line; do
             [[ -n "$line" ]] && NOTES_MESH_PEERS+=("$line")
         done < <(rbw get "$VAULT_ITEM" | sed '/^---$/,$d')
@@ -115,7 +121,7 @@ load_peers() {
     fi
 
     echo -e "${RED}✗${NC} no peer config found"
-    echo "   unlock rbw so the peers load from vault item $VAULT_ITEM"
+    echo "   install rbw so the peers load from vault item $VAULT_ITEM"
     echo "   or create $CONF_FILE (copy from notes-mesh.conf.template)"
     echo "   or set NOTES_MESH_PEERS_ENV=\"id1|name1,id2|name2\""
     exit 1
