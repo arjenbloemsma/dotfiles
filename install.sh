@@ -817,7 +817,9 @@ print_completion() {
 
     echo "Next steps:"
     echo "  1. Edit ~/.config/git/config.local with your git user details"
-    echo "  2. Configure rbw: 'rbw config set base_url <vault-url>' and 'rbw config set email <you>', then 'rbw login'"
+    if ! rbw unlocked >/dev/null 2>&1; then
+        echo "  2. Configure rbw: 'rbw config set base_url <vault-url>' and 'rbw config set email <you>', then 'rbw login'"
+    fi
     echo "  3. Restart your shell or run: source $rc_file"
     echo "  4. Install tmux plugins: prefix + I (in tmux)"
     if command -v tailscale >/dev/null 2>&1 && ! tailscale status >/dev/null 2>&1; then
