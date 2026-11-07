@@ -5,7 +5,8 @@
 # - Installs syncthing if missing (native package manager only, no brew on Linux)
 # - Creates ~/notes-vault
 # - Starts syncthing as a user service
-# - Reads peer list from notes-mesh.conf.local (or NOTES_MESH_PEERS_ENV var)
+# - Reads peer list from NOTES_MESH_PEERS_ENV, notes-mesh.conf.local, or the
+#   Vaultwarden item notes-mesh-peers (via rbw), in that order
 # - Adds each peer as a remote device and shares notes-vault with each
 # - Prints device ID + Web UI URL so a peer can accept the pairing
 #
@@ -21,6 +22,7 @@ NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONF_FILE="$SCRIPT_DIR/notes-mesh.conf.local"
+VAULT_ITEM="notes-mesh-peers"
 VAULT_DIR="$HOME/notes-vault"
 
 # Defaults — overridable in conf file
@@ -76,7 +78,7 @@ require_pkg_manager() {
     echo -e "${GREEN}✓${NC} package manager ready ($os)"
 }
 
-# Load peers from conf file or env var. Env var wins.
+# Load peers from env var, conf file or vault item, first one found wins.
 # Conf file format documented in notes-mesh.conf.template.
 # Env format: comma-separated "ID|name" entries.
 load_peers() {
@@ -97,8 +99,24 @@ load_peers() {
         return
     fi
 
+    # Vault item body: one "ID|name" per line, then the context note after ---
+    local line
+    if command -v rbw >/dev/null 2>&1 && rbw unlocked >/dev/null 2>&1 \
+        && rbw get "$VAULT_ITEM" >/dev/null 2>&1; then
+        while IFS= read -r line; do
+            [[ -n "$line" ]] && NOTES_MESH_PEERS+=("$line")
+        done < <(rbw get "$VAULT_ITEM" | sed '/^---$/,$d')
+        if (( ${#NOTES_MESH_PEERS[@]} == 0 )); then
+            echo -e "${RED}✗${NC} vault item $VAULT_ITEM has no peers"
+            exit 1
+        fi
+        echo -e "${GREEN}✓${NC} loaded ${#NOTES_MESH_PEERS[@]} peer(s) from vault item $VAULT_ITEM"
+        return
+    fi
+
     echo -e "${RED}✗${NC} no peer config found"
-    echo "   create $CONF_FILE (copy from notes-mesh.conf.template)"
+    echo "   unlock rbw so the peers load from vault item $VAULT_ITEM"
+    echo "   or create $CONF_FILE (copy from notes-mesh.conf.template)"
     echo "   or set NOTES_MESH_PEERS_ENV=\"id1|name1,id2|name2\""
     exit 1
 }
