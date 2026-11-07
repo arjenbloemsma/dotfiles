@@ -672,7 +672,9 @@ start_proton_vpn() {
 
 # Dark mode for GTK4 and libadwaita apps, which read this through the desktop
 # portal. GTK3 apps read the stowed gtk-3.0/settings.ini instead.
+# Fedora only. Omarchy's theme switcher sets these itself.
 setup_dark_mode() {
+    [[ "$(detect_os)" == "fedora" ]] || return 0
     command -v gsettings >/dev/null 2>&1 || return
 
     echo "Checking dark mode..."
