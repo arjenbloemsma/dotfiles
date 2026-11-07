@@ -19,7 +19,8 @@ NC='\033[0m'
 CONF_PATH="/etc/chrony.conf"
 SERVERS=(nts.time.nl nts.netnod.se)
 MARKER="# Managed by dotfiles scripts/setup-time-sync.sh"
-# Sorts after the distro's own drop-in, so its FallbackNTP is replaced
+# Sorts after the distro's own drop-in. Server lists add up across drop-ins,
+# so an empty FallbackNTP= clears the distro's list first.
 TIMESYNCD_DROP_IN="/etc/systemd/timesyncd.conf.d/20-time-servers.conf"
 
 # Guards
@@ -31,7 +32,7 @@ fi
 if ! command -v chronyc >/dev/null 2>&1 && systemctl is-active --quiet systemd-timesyncd; then
     echo "Applying time servers to systemd-timesyncd on $(hostname)..."
     TMP_CONF=$(mktemp)
-    printf '%s\n[Time]\nNTP=ntp.time.nl\nFallbackNTP=ntp.netnod.se\n' "$MARKER" > "$TMP_CONF"
+    printf '%s\n[Time]\nNTP=ntp.time.nl\nFallbackNTP=\nFallbackNTP=ntp.netnod.se\n' "$MARKER" > "$TMP_CONF"
     if cmp -s "$TMP_CONF" "$TIMESYNCD_DROP_IN"; then
         echo -e "${GREEN}✓${NC} $TIMESYNCD_DROP_IN already up to date"
     else
