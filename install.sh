@@ -665,7 +665,28 @@ start_proton_vpn() {
     fi
 
     "$DOTFILES_DIR/scripts/setup-proton-vpn.sh"
+
+    # The tunnel cuts off IPv6, so a control connection tailscaled opened over
+    # IPv6 before the tunnel came up stalls. Start tailscaled after the tunnel.
+    local drop_in="/etc/systemd/system/tailscaled.service.d/after-proton.conf"
+    local tmp
+    tmp=$(mktemp)
+    printf '[Unit]\nAfter=wg-quick@proton.service\n' > "$tmp"
+    if ! cmp -s "$tmp" "$drop_in"; then
+        echo -e "${YELLOW}→${NC} writing $drop_in"
+        sudo install -D -m 644 -o root -g root "$tmp" "$drop_in"
+        sudo systemctl daemon-reload
+    fi
+    rm -f "$tmp"
+
+    local was_running=false
+    systemctl is-active --quiet wg-quick@proton && was_running=true
     sudo systemctl enable --now wg-quick@proton >/dev/null
+    # tailscale up ran before the tunnel, so reconnect through it
+    if [[ "$was_running" == false ]]; then
+        echo -e "${YELLOW}→${NC} restarting tailscaled to reconnect through the tunnel"
+        sudo systemctl restart tailscaled
+    fi
     echo -e "${GREEN}✓${NC} Proton VPN starts on boot"
     echo ""
 }
