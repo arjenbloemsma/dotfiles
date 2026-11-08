@@ -29,6 +29,8 @@ VAULT_DIR="$HOME/notes-vault"
 NOTES_FOLDER_ID="notes-vault"
 NOTES_FOLDER_LABEL="notes-vault"
 NOTES_MESH_PEERS=()
+# SSH target of the hub, for the steps printed at the end
+NOTES_MESH_HUB=""
 
 detect_os() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -99,7 +101,8 @@ load_peers() {
         return
     fi
 
-    # Vault item body: one "ID|name" per line, then the context note after ---
+    # Vault item body: one "ID|name" per line and a "hub=user@host" line,
+    # then the context note after ---
     local line
     if command -v rbw >/dev/null 2>&1; then
         rbw unlocked >/dev/null 2>&1 || rbw unlock
@@ -110,7 +113,11 @@ load_peers() {
             exit 1
         fi
         while IFS= read -r line; do
-            [[ -n "$line" ]] && NOTES_MESH_PEERS+=("$line")
+            if [[ "$line" == hub=* ]]; then
+                NOTES_MESH_HUB="${line#hub=}"
+            elif [[ -n "$line" ]]; then
+                NOTES_MESH_PEERS+=("$line")
+            fi
         done < <(rbw get "$VAULT_ITEM" | sed '/^---$/,$d')
         if (( ${#NOTES_MESH_PEERS[@]} == 0 )); then
             echo -e "${RED}✗${NC} vault item $VAULT_ITEM has no peers"
@@ -278,15 +285,17 @@ print_join_info() {
     hostname=$(hostname)
 
     echo ""
-    echo -e "${GREEN}━━━ This node is configured. Two clicks remain on each peer: ━━━${NC}"
+    echo -e "${GREEN}━━━ This node is configured. The hub still has to accept it: ━━━${NC}"
     echo ""
     echo -e "  Hostname:   ${BLUE}$hostname${NC}"
     echo -e "  Device ID:  ${BLUE}$device_id${NC}"
     echo -e "  Web UI:     ${BLUE}http://$gui_addr${NC}"
     echo ""
-    echo "  On each peer's web UI:"
-    echo "    1. Accept the 'New Device' prompt for this hostname"
-    echo "    2. Accept the 'New Folder' prompt to share notes-vault back"
+    echo "  On a machine with SSH access to the hub:"
+    echo "    1. ssh -L 8385:127.0.0.1:8384 ${NOTES_MESH_HUB:-<hub>}   (leave it open)"
+    echo "    2. Open http://127.0.0.1:8385"
+    echo "    3. Remove any old device named $hostname"
+    echo "    4. Accept 'New Device' for $hostname, then 'New Folder' for $NOTES_FOLDER_LABEL"
     echo ""
     echo "  Then notes-vault syncs automatically."
     echo ""
