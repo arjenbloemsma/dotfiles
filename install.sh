@@ -825,6 +825,47 @@ install_packages() {
     echo ""
 }
 
+# Remove links into the dotfiles whose target was deleted from the repo.
+# Stow does not clean these up on restow.
+remove_broken_links() {
+    echo "Removing broken links..."
+    local -a all_packages=("${STOW_PACKAGES[@]}")
+    append_os_packages all_packages
+
+    # The folders each package fills, plus $HOME and ~/.config for the
+    # links of packages that were removed from the repo
+    local -a dirs=("$HOME" "$HOME/.config")
+    local package dir
+    for package in "${all_packages[@]}"; do
+        [[ -d "$DOTFILES_DIR/$package" ]] || continue
+        while IFS= read -r dir; do
+            dirs+=("$HOME${dir#"$DOTFILES_DIR/$package"}")
+        done < <(find "$DOTFILES_DIR/$package" -type d)
+    done
+
+    local repo link found=false
+    repo="$(basename "$DOTFILES_DIR")"
+    while IFS= read -r dir; do
+        [[ -d "$dir" && ! -L "$dir" ]] || continue
+        for link in "$dir"/* "$dir"/.*; do
+            [[ -L "$link" && ! -e "$link" ]] || continue
+            [[ "$(readlink "$link")" == *"$repo/"* ]] || continue
+            found=true
+            if [[ "$DRY_RUN" == true ]]; then
+                echo -e "${BLUE}→${NC} Would remove ${link/#"$HOME"/"~"}"
+            else
+                rm "$link"
+                echo -e "${GREEN}✓${NC} removed ${link/#"$HOME"/"~"}"
+            fi
+        done
+    done < <(printf '%s\n' "${dirs[@]}" | sort -u)
+
+    if [[ "$found" == false ]]; then
+        echo -e "${GREEN}✓${NC} No broken links"
+    fi
+    echo ""
+}
+
 # Install tmux plugin manager
 install_tmux_plugins() {
     if [[ "$DRY_RUN" == true ]]; then
@@ -917,6 +958,7 @@ main() {
     install_applications
     check_all_conflicts
     install_packages
+    remove_broken_links
     setup_rbw_config
     setup_network_access
     # After the vault login, so the identity can be checked against the vault
