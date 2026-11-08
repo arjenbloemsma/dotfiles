@@ -33,7 +33,6 @@ INSTALL=(
     "azure-functions-core-tools@4"
     "bat"
     "bitwarden-cli"
-    "bun"
     "fastfetch"
     "fd"
     "flyctl"
@@ -93,12 +92,6 @@ get_app_name() {
 
     case "$package" in
         nvim) echo "neovim" ;;
-        bun)
-            case "$os" in
-                macos) echo "bun" ;;
-                *) ;; # installed via install script
-            esac
-            ;;
         bitwarden-cli)
             case "$os" in
                 macos) echo "bitwarden-cli" ;;
@@ -369,10 +362,6 @@ install_applications() {
 
     # Install tools that need custom install on Linux
     if [[ "$os" != "macos" ]]; then
-        if ! command -v bun >/dev/null 2>&1; then
-            echo "Installing bun..."
-            curl -fsSL https://bun.sh/install | bash
-        fi
         if ! command -v bw >/dev/null 2>&1; then
             echo "Installing Bitwarden CLI..."
             download_zipped_binary \
