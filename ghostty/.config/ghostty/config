@@ -9,9 +9,3 @@ font-family-italic = "JetBrainsMono Nerd Font Mono"
 macos-titlebar-proxy-icon = hidden
 macos-option-as-alt = true
 title = " "
-
-# Shell integration provides features like prompt jumping, smart terminal closing,
-# and command output selection by injecting escape sequences into the shell.
-# Disabled because it causes Yazi to malfunction: when launching yazi with 'yy',
-# it would switch tmux panes and write corrupt escape sequences (\?62;22;52c).
-shell-integration = none

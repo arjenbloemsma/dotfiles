@@ -14,7 +14,6 @@ STOW_PACKAGES=(
     "shell"
     "starship"
     "tmux"
-    "yazi"
 )
 
 STOW_PACKAGES_MACOS=(

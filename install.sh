@@ -55,7 +55,6 @@ INSTALL=(
     "syncthing"
     "tmux"
     "tree"
-    "yazi"
     "zoxide"
 )
 
