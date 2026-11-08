@@ -16,7 +16,8 @@ into the package; restow refreshes them.
   Per-project dev environments via devpod (`devpod up <repo>`)
 - Omarchy: pacman installs the same host packages as Fedora Atomic.
   Omarchy's own desktop and dev tools stay as shipped; the `hypr` package
-  adds vim-style (SUPER + H/J/K/L) window focus
+  adds vim-style (SUPER + H/J/K/L) window focus and the `omarchy`
+  package a Bloemium screensaver
 
 Plain Fedora (non-Atomic) is not supported.
 
