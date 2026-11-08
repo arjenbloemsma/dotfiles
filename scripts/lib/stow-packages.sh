@@ -1,5 +1,5 @@
 # Stow package lists.
-# - STOW_PACKAGES + STOW_PACKAGES_{MACOS,LINUX,SWAY}: sourced by install.sh,
+# - STOW_PACKAGES + STOW_PACKAGES_{MACOS,LINUX,SWAY,OMARCHY}: sourced by install.sh,
 #   stow onto the host.
 # - STOW_PACKAGES_DEVCONTAINER: sourced by scripts/devcontainer-install.sh,
 #   stow inside a devpod container via devpod's dotfiles hook.
@@ -31,6 +31,12 @@ STOW_PACKAGES_LINUX=(
 # colours and borders, waybar, lock screen, GTK dark mode.
 STOW_PACKAGES_SWAY=(
     "sway"
+)
+
+# Only stowed on Omarchy. Holds the Hyprland keybinding overrides that load
+# after Omarchy's defaults.
+STOW_PACKAGES_OMARCHY=(
+    "hypr"
 )
 
 STOW_PACKAGES_DEVCONTAINER=(

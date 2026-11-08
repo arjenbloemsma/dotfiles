@@ -165,6 +165,9 @@ append_os_packages() {
         if command -v sway >/dev/null 2>&1; then
             target+=("${STOW_PACKAGES_SWAY[@]}")
         fi
+        if [[ "$os" == "omarchy" ]]; then
+            target+=("${STOW_PACKAGES_OMARCHY[@]}")
+        fi
     fi
 }
 

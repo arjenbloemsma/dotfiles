@@ -15,7 +15,8 @@ into the package; restow refreshes them.
   docker-compose v2) go to `~/.local/bin` and `~/.docker/cli-plugins/`.
   Per-project dev environments via devpod (`devpod up <repo>`)
 - Omarchy: pacman installs the same host packages as Fedora Atomic.
-  Omarchy's own desktop and dev tools stay as shipped
+  Omarchy's own desktop and dev tools stay as shipped; the `hypr` package
+  adds vim-style (SUPER + H/J/K/L) window focus
 
 Plain Fedora (non-Atomic) is not supported.
 
