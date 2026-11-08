@@ -1,6 +1,9 @@
 # Interactive bash startup file.
 # Sourced for interactive non-login shells. .bash_profile sources us for login shells.
 
+# Omarchy environment (OMARCHY_PATH + PATH), needed even for non-interactive shells
+[[ -r /usr/share/omarchy/default/bash/env-bootstrap ]] && source /usr/share/omarchy/default/bash/env-bootstrap
+
 # Nothing to do for non-interactive shells (ssh commands, scripts)
 [[ $- != *i* ]] && return
 
