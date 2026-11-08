@@ -311,6 +311,29 @@ missing_brew() {
     echo "${missing[*]:-nothing}"
 }
 
+# Reinstall apps that Homebrew lists as installed while the app itself is
+# gone, for example after an install that was cancelled halfway.
+reinstall_missing_apps() {
+    local cask kind name
+    local -a missing=()
+    while IFS=$'\t' read -r cask kind name; do
+        case "$kind" in
+            app) [[ -e "/Applications/$name" ]] && continue ;;
+            pkg) pkgutil --pkgs="$name" 2>/dev/null | grep -q . && continue ;;
+        esac
+        [[ " ${missing[*]} " == *" $cask "* ]] || missing+=("$cask")
+    done < <(brew info --cask --json=v2 "${APPS[@]}" | jq -r '
+        .casks[] | select(.installed) | .token as $t | .artifacts[]
+        | (.app? // empty | .[] | strings | "\($t)\tapp\t\(.)"),
+          (.uninstall? // empty | .[] | .pkgutil? // empty
+           | (if type == "array" then .[] else . end) | "\($t)\tpkg\t\(.)")')
+
+    if (( ${#missing[@]} > 0 )); then
+        echo -e "${YELLOW}→${NC} reinstalling missing apps: ${missing[*]}"
+        brew reinstall --cask "${missing[@]}"
+    fi
+}
+
 # Install applications
 install_applications() {
     local os=$(detect_os)
@@ -402,6 +425,7 @@ install_applications() {
         echo "Installing apps..."
         if [[ "$os" == "macos" ]] && command -v brew >/dev/null 2>&1; then
             brew install --cask "${APPS[@]}"
+            reinstall_missing_apps
         elif command -v flatpak >/dev/null 2>&1; then
             flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
             flatpak install --user -y flathub "${APPS_FLATPAK[@]}"
