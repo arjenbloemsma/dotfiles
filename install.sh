@@ -73,7 +73,7 @@ APPS=(
     "microsoft-azure-storage-explorer"
     "pgadmin4"
     "protonvpn"
-    "tailscale"
+    "tailscale-app"
     "vlc"
 )
 
