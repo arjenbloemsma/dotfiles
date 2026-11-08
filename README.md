@@ -136,7 +136,6 @@ No host-level dev tooling needed beyond what bootstrap provisions.
 
 ### Post-install
 
-- Edit `~/.config/git/config.local` with name and email
 - Create `~/.config/shell/local.sh` for machine-specific env exports (sourced first by both shells)
 - Press `prefix + I` in tmux to install plugins
 
@@ -163,5 +162,5 @@ by `install.sh`.
 - **First-time install on Linux**: the OS's default `~/.bashrc` and `~/.bash_profile` conflict with the stowed versions. `install.sh` prints the diff and asks `Replace? [y/N]` for each one. Always review the diff. The OOTB Fedora `.bashrc` behaviour (system `/etc/bashrc` sourcing, `$HOME/.local/bin` on PATH) is already covered by `shell/fedora.sh`; for other distros or hand-edited files, port anything useful into the right `shell/<distro>.sh` first.
 - **Machine-local overrides**: `~/.config/shell/local.sh`, sourced first by both shells, not tracked
 - **DNS** (Linux): `bootstrap.sh` runs `scripts/setup-system-dns.sh` to switch the host to Quad9 + Mullvad and ignore DHCP-supplied DNS. Idempotent.
-- **Secrets**: Git user details go in `~/.config/git/config.local` (not tracked)
+- **Secrets**: git name and email live in `~/.config/git/config.local` (not tracked). `install.sh` checks them against the Vaultwarden item `git-identity` and sets them when they differ
 - **Tmux plugins**: Managed by TPM, not tracked in git

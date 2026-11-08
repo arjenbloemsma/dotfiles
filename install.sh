@@ -520,19 +520,61 @@ setup_git_config() {
     local config_local="$HOME/.config/git/config.local"
     local old_config="$HOME/.gitconfig.local"
 
-    if [[ -f "$config_local" ]]; then
-        echo -e "${GREEN}✓${NC} Git config.local exists"
-    elif [[ -f "$old_config" ]]; then
+    if [[ ! -f "$config_local" && -f "$old_config" ]]; then
         print_action "migrate $old_config to XDG location" true
         execute mkdir -p "$HOME/.config/git"
         execute mv "$old_config" "$config_local"
-    else
-        echo -e "${YELLOW}⚠${NC} $config_local not found"
-        print_action "create from template" true
-        execute mkdir -p "$HOME/.config/git"
-        execute cp "$DOTFILES_DIR/git/.config/git/config.local.template" "$config_local"
-        echo -e "${YELLOW}→${NC} Edit $config_local with your name and email"
     fi
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo -e "${BLUE}→${NC} Would check git user.name and user.email against the vault"
+        echo ""
+        return
+    fi
+
+    # The vault holds the correct name and email, so they stay out of this
+    # public repo. Item body: "name=..." and "email=..." lines, then a note after ---
+    echo ""
+    login_vault
+    local identity name email
+    if ! identity=$(rbw get git-identity 2>/dev/null); then
+        echo -e "${RED}✗${NC} vault item git-identity not found" >&2
+        exit 1
+    fi
+    identity=$(sed '/^---$/,$d' <<<"$identity")
+    name=$(sed -n 's/^name=//p' <<<"$identity" | head -1)
+    email=$(sed -n 's/^email=//p' <<<"$identity" | head -1)
+    if [[ -z "$name" || -z "$email" ]]; then
+        echo -e "${RED}✗${NC} vault item git-identity needs name= and email= lines" >&2
+        exit 1
+    fi
+
+    local current_name current_email ans
+    current_name=$(git config --global user.name || true)
+    current_email=$(git config --global user.email || true)
+    if [[ "$current_name" == "$name" && "$current_email" == "$email" ]]; then
+        echo -e "${GREEN}✓${NC} git user.name and user.email match the vault"
+        echo ""
+        return
+    fi
+
+    # Ask before replacing a name or email that is already set
+    if [[ -n "$current_name" || -n "$current_email" ]]; then
+        echo -e "${YELLOW}⚠${NC} git identity differs from the vault"
+        echo "    current: $current_name <$current_email>"
+        echo "    vault:   $name <$email>"
+        read -r -p "Replace with the vault values? [y/N] " ans </dev/tty
+        if [[ "${ans,,}" != "y" && "${ans,,}" != "yes" ]]; then
+            echo -e "${YELLOW}→${NC} kept the current git identity"
+            echo ""
+            return
+        fi
+    fi
+
+    echo -e "${BLUE}→${NC} set git user.name and user.email from the vault"
+    mkdir -p "$HOME/.config/git"
+    git config --file "$config_local" user.name "$name"
+    git config --file "$config_local" user.email "$email"
 
     echo ""
 }
@@ -620,6 +662,9 @@ restrict_ssh_to_tailnet() {
 
 # Point rbw at Vaultwarden and log in. Asks for the email once.
 login_vault() {
+    # Install calls this from more than one step; once per run is enough
+    [[ "${VAULT_READY:-false}" == true ]] && return 0
+
     echo "Checking Vaultwarden login..."
 
     local base_url="https://vault.bloemium.ninja"
@@ -643,6 +688,13 @@ login_vault() {
         fi
     fi
 
+    # The local copy only has items from the last sync
+    if ! rbw sync; then
+        echo -e "${RED}✗${NC} could not sync with Vaultwarden" >&2
+        exit 1
+    fi
+
+    VAULT_READY=true
     echo -e "${GREEN}✓${NC} Vaultwarden unlocked"
     echo ""
 }
@@ -654,10 +706,6 @@ start_proton_vpn() {
 
     echo "Checking Proton VPN..."
 
-    if ! rbw sync; then
-        echo -e "${RED}✗${NC} could not sync with Vaultwarden" >&2
-        exit 1
-    fi
     if ! rbw get "$item" >/dev/null 2>&1; then
         echo -e "${RED}✗${NC} vault item $item not found" >&2
         echo "    Create a WireGuard config in the Proton dashboard, store it as $item and re-run." >&2
@@ -816,17 +864,13 @@ print_completion() {
     fi
 
     echo "Next steps:"
-    echo "  1. Edit ~/.config/git/config.local with your git user details"
-    if ! rbw unlocked >/dev/null 2>&1; then
-        echo "  2. Configure rbw: 'rbw config set base_url <vault-url>' and 'rbw config set email <you>', then 'rbw login'"
-    fi
-    echo "  3. Restart your shell or run: source $rc_file"
-    echo "  4. Install tmux plugins: prefix + I (in tmux)"
+    echo "  1. Restart your shell or run: source $rc_file"
+    echo "  2. Install tmux plugins: prefix + I (in tmux)"
     if command -v tailscale >/dev/null 2>&1 && ! tailscale status >/dev/null 2>&1; then
-        echo "  5. Sign into tailnet: sudo tailscale up"
+        echo "  3. Sign into tailnet: sudo tailscale up"
     fi
     if [[ "$(detect_os)" == "macos" ]] && ! command -v ghostty >/dev/null 2>&1; then
-        echo "  6. Set terminal font to 'JetBrainsMono Nerd Font' for icon support"
+        echo "  4. Set terminal font to 'JetBrainsMono Nerd Font' for icon support"
     fi
 }
 
@@ -871,11 +915,12 @@ main() {
     # Run installation steps
     check_prerequisites
     install_applications
-    setup_git_config
     check_all_conflicts
     install_packages
     setup_rbw_config
     setup_network_access
+    # After the vault login, so the identity can be checked against the vault
+    setup_git_config
     setup_dark_mode
     install_tmux_plugins
     print_completion
