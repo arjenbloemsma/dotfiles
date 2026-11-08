@@ -812,10 +812,28 @@ install_package() {
     fi
 }
 
+# Keep ~/.claude/skills and ~/.claude/agents real folders. Stow then links
+# each shared skill and agent on its own, and new local ones stay out of
+# the repo. A whole-folder link into the repo is replaced.
+prepare_claude_dirs() {
+    local dir
+    for dir in "$HOME/.claude/skills" "$HOME/.claude/agents"; do
+        if [[ -L "$dir" && "$(readlink "$dir")" == *"$(basename "$DOTFILES_DIR")/claude/"* ]]; then
+            if [[ "$DRY_RUN" == true ]]; then
+                echo -e "${BLUE}→${NC} Would replace the link ${dir/#"$HOME"/"~"} with a folder"
+                continue
+            fi
+            rm "$dir"
+        fi
+        [[ "$DRY_RUN" == true ]] || mkdir -p "$dir"
+    done
+}
+
 # Install all packages
 install_packages() {
     echo "Installing packages..."
     cd "$DOTFILES_DIR"
+    prepare_claude_dirs
 
     local -a all_packages=("${STOW_PACKAGES[@]}")
     append_os_packages all_packages
