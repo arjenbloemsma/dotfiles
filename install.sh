@@ -552,8 +552,8 @@ setup_git_config() {
     fi
 
     local current_name current_email ans
-    current_name=$(git config --global user.name || true)
-    current_email=$(git config --global user.email || true)
+    current_name=$(git config --global --includes user.name || true)
+    current_email=$(git config --global --includes user.email || true)
     if [[ "$current_name" == "$name" && "$current_email" == "$email" ]]; then
         echo -e "${GREEN}✓${NC} git user.name and user.email match the vault"
         echo ""
