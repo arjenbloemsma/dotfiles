@@ -630,16 +630,18 @@ setup_rbw_config() {
 # Join the tailnet, limit SSH to it, log in to Vaultwarden and start Proton VPN
 # on boot. Each step needs the one before: Vaultwarden is only reachable over
 # the tailnet, and the Proton config comes from Vaultwarden.
-# Fedora Atomic and Omarchy only. Each step skips what is already done.
+# Fedora Atomic and Omarchy. macOS only joins the tailnet: its firewall and
+# Proton VPN are apps. Each step skips what is already done.
 setup_network_access() {
     local os
     os=$(detect_os)
-    if [[ "$os" != "omarchy" ]] && ! [[ "$os" == "fedora" && -f /run/ostree-booted ]]; then
+    if [[ "$os" != "macos" && "$os" != "omarchy" ]] && ! [[ "$os" == "fedora" && -f /run/ostree-booted ]]; then
         return 0
     fi
     [[ "$DRY_RUN" == true ]] && return 0
 
     join_tailnet
+    [[ "$os" == "macos" ]] && return 0
     restrict_ssh_to_tailnet
     login_vault
     start_proton_vpn
@@ -648,11 +650,32 @@ setup_network_access() {
 join_tailnet() {
     echo "Checking tailnet..."
 
-    if tailscale status >/dev/null 2>&1; then
+    local -a tailscale=(tailscale)
+    local -a tailscale_up=(sudo tailscale up)
+    if [[ "$(detect_os)" == "macos" ]]; then
+        # The app's CLI talks to the running app, so start it first
+        tailscale=(/Applications/Tailscale.app/Contents/MacOS/Tailscale)
+        tailscale_up=("${tailscale[@]}" up)
+        open -a Tailscale
+        echo "Waiting for Tailscale to start, allow its VPN configuration if macOS asks..."
+        local tries=0
+        until "${tailscale[@]}" status --json >/dev/null 2>&1; do
+            if (( ++tries > 60 )); then
+                echo -e "${RED}✗${NC} Tailscale did not start" >&2
+                exit 1
+            fi
+            sleep 2
+        done
+    fi
+
+    # Only online counts: a node deleted in the admin console still reports
+    # a working status
+    if "${tailscale[@]}" status --json --peers=false 2>/dev/null | grep -q '"Online": true'; then
         echo -e "${GREEN}✓${NC} on the tailnet"
     else
         echo -e "${YELLOW}→${NC} joining the tailnet, open the printed URL to log in"
-        if ! sudo tailscale up; then
+        # Always sign in fresh: a kept key of a deleted node is refused
+        if ! "${tailscale_up[@]}" --force-reauth; then
             echo -e "${RED}✗${NC} could not join the tailnet" >&2
             exit 1
         fi
