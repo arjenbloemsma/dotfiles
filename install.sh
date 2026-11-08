@@ -812,18 +812,22 @@ install_package() {
     fi
 }
 
-# Keep ~/.claude/skills and ~/.claude/agents real folders. Stow then links
+# Keep ~/.claude/skills, agents and plugins real folders. Stow then links
 # each shared skill and agent on its own, and new local ones stay out of
-# the repo. A whole-folder link into the repo is replaced.
+# the repo. A whole-folder link into the repo is replaced. Plugins hold
+# Claude Code's own data, so that folder is moved out of the repo.
 prepare_claude_dirs() {
     local dir
-    for dir in "$HOME/.claude/skills" "$HOME/.claude/agents"; do
+    for dir in "$HOME/.claude/skills" "$HOME/.claude/agents" "$HOME/.claude/plugins"; do
         if [[ -L "$dir" && "$(readlink "$dir")" == *"$(basename "$DOTFILES_DIR")/claude/"* ]]; then
             if [[ "$DRY_RUN" == true ]]; then
                 echo -e "${BLUE}→${NC} Would replace the link ${dir/#"$HOME"/"~"} with a folder"
                 continue
             fi
             rm "$dir"
+            if [[ "$dir" == */plugins && -d "$DOTFILES_DIR/claude/.claude/plugins" ]]; then
+                mv "$DOTFILES_DIR/claude/.claude/plugins" "$dir"
+            fi
         fi
         [[ "$DRY_RUN" == true ]] || mkdir -p "$dir"
     done
@@ -852,10 +856,13 @@ remove_broken_links() {
     local -a all_packages=("${STOW_PACKAGES[@]}")
     append_os_packages all_packages
 
-    # The folders each package fills, plus $HOME and ~/.config for the
-    # links of packages that were removed from the repo
+    # The folders each package fills, plus $HOME, ~/.config and the folders
+    # in ~/.claude for links whose whole folder was removed from the repo
     local -a dirs=("$HOME" "$HOME/.config")
     local package dir
+    for dir in "$HOME/.claude"/*/; do
+        dirs+=("${dir%/}")
+    done
     for package in "${all_packages[@]}"; do
         [[ -d "$DOTFILES_DIR/$package" ]] || continue
         while IFS= read -r dir; do
