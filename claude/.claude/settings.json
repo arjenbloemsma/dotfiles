@@ -15,38 +15,47 @@
       "CronList"
     ],
     "ask": [],
-    "defaultMode": "default"
+    "defaultMode": "auto"
+  },
+  "disableClaudeAiConnectors": true,
+  "skillOverrides": {
+    "anthropic-skills:google-workspace": "off",
+    "anthropic-skills:chrome-browser": "off"
   },
   "hooks": {
     "PreToolUse": [
       {
         "matcher": "Read",
         "hooks": [
-          { "type": "command", "command": "bash \"$HOME/dotfiles/claude/.claude/hooks/block-secret-read.sh\"" }
+          {
+            "type": "command",
+            "command": "bash \"$HOME/dotfiles/claude/.claude/hooks/block-secret-read.sh\""
+          }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "bash \"$HOME/dotfiles/claude/.claude/hooks/block-inline-secret-bash.sh\"" }
+          {
+            "type": "command",
+            "command": "bash \"$HOME/dotfiles/claude/.claude/hooks/block-inline-secret-bash.sh\""
+          }
         ]
       },
       {
         "matcher": "Write|Edit",
         "hooks": [
-          { "type": "command", "command": "bash \"$HOME/dotfiles/claude/.claude/hooks/block-em-dash-write.sh\"" }
+          {
+            "type": "command",
+            "command": "bash \"$HOME/dotfiles/claude/.claude/hooks/block-em-dash-write.sh\""
+          }
         ]
       }
     ]
   },
-  "disableWorkflows": true,
   "disableRemoteControl": true,
-  "disableClaudeAiConnectors": true,
+  "disableWorkflows": true,
   "disableArtifact": true,
-  "skillOverrides": {
-    "anthropic-skills:google-workspace": "off",
-    "anthropic-skills:chrome-browser": "off"
-  },
   "outputStyle": "Concise",
   "theme": "dark"
 }
