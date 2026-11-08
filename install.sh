@@ -284,7 +284,7 @@ setup_macos_devpod_host() {
     fi
     if ! command -v devpod >/dev/null 2>&1; then
         echo "Installing devpod via brew..."
-        brew trust --formula loft-sh/tap/devpod
+        brew trust --tap loft-sh/tap
         brew install loft-sh/tap/devpod
     fi
     devpod provider add docker 2>/dev/null || true
@@ -349,12 +349,13 @@ install_applications() {
     case "$os" in
         macos|ubuntu|debian)
             if command -v brew >/dev/null 2>&1; then
-                # Homebrew only loads formulae from other taps once they are
-                # trusted. Being in this list is that decision.
+                # Homebrew only loads formulae from a tap once it is trusted.
+                # Trust the whole tap of each formula listed here, because an
+                # upgrade can load other formulae from it.
                 local formula
                 for formula in "${formulae[@]}"; do
                     if [[ "$formula" == */*/* ]]; then
-                        brew trust --formula "$formula"
+                        brew trust --tap "${formula%/*}"
                     fi
                 done
                 brew install "${formulae[@]}"
