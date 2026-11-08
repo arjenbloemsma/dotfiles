@@ -99,8 +99,8 @@ get_app_name() {
             esac
             ;;
         ghostty) ;; # cask, installed with APPS
-        yabai) echo "koekeishiya/formulae/yabai" ;;
-        skhd) echo "koekeishiya/formulae/skhd" ;;
+        yabai) echo "asmvik/formulae/yabai" ;;
+        skhd) echo "asmvik/formulae/skhd" ;;
         azure-functions-core-tools@4) echo "azure/functions/azure-functions-core-tools@4" ;;
         *) echo "$package" ;;
     esac
