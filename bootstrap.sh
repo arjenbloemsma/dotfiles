@@ -16,6 +16,12 @@ DOTFILES_DIR="$HOME/dotfiles"
 # Host packages for the Linux desktops; names are the same on Fedora and Omarchy
 HOST_PACKAGES=(tmux stow syncthing tailscale rbw neovim wireguard-tools)
 
+# Omarchy-only additions; Fedora Atomic ships podman in its base image
+OMARCHY_PACKAGES=(podman)
+
+# Omarchy defaults that hosts don't keep
+OMARCHY_REMOVE=(docker docker-buildx docker-compose ufw-docker)
+
 # Detect OS and package manager
 detect_os() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -80,7 +86,7 @@ install_prerequisites() {
             ;;
         omarchy)
             # --needed skips what Omarchy already ships
-            sudo pacman -S --needed --noconfirm "${HOST_PACKAGES[@]}"
+            sudo pacman -S --needed --noconfirm "${HOST_PACKAGES[@]}" "${OMARCHY_PACKAGES[@]}"
             ;;
         *)
             echo -e "${RED}✗${NC} Unsupported OS: $os"
@@ -90,6 +96,37 @@ install_prerequisites() {
     esac
 
     echo -e "${GREEN}✓${NC} Prerequisites installed"
+    echo ""
+}
+
+# Remove the Omarchy defaults listed in OMARCHY_REMOVE. Safe to re-run, so
+# it also undoes an Omarchy update that brings one back.
+remove_omarchy_defaults() {
+    [[ "$(detect_os)" == "omarchy" ]] || return 0
+
+    local installed=()
+    local pkg
+    for pkg in "${OMARCHY_REMOVE[@]}"; do
+        pacman -Q "$pkg" >/dev/null 2>&1 && installed+=("$pkg")
+    done
+
+    if (( ${#installed[@]} > 0 )); then
+        echo "Removing Omarchy defaults: ${installed[*]}..."
+        sudo systemctl disable --now docker.socket docker.service containerd.service 2>/dev/null || true
+        # -Rns also takes containerd and runc, which only docker needs
+        sudo pacman -Rns --noconfirm "${installed[@]}"
+        echo -e "${GREEN}✓${NC} Omarchy defaults removed"
+    fi
+
+    sudo rm -rf /etc/docker
+
+    # ufw-docker leaves its DOCKER-USER rules behind in after.rules
+    if sudo grep -q '^# BEGIN UFW AND DOCKER' /etc/ufw/after.rules 2>/dev/null; then
+        sudo sed -i '/^# BEGIN UFW AND DOCKER/,/^# END UFW AND DOCKER/d' /etc/ufw/after.rules
+        sudo ufw reload >/dev/null
+        echo -e "${GREEN}✓${NC} ufw-docker rules removed"
+    fi
+
     echo ""
 }
 
@@ -158,6 +195,7 @@ main() {
     echo "🚀 Dotfiles Bootstrap"
     echo ""
 
+    remove_omarchy_defaults
     install_prerequisites
     clone_dotfiles
     mkdir -p "$HOME/dev"
