@@ -20,6 +20,8 @@ set -o vi
 # Omarchy's key bindings only reach the default key table, so add them
 # to the vi one too
 [[ -r "$_omarchy_bash/inputrc" ]] && bind -m vi-insert -f "$_omarchy_bash/inputrc"
+# Vi insert mode leaves Ctrl-l unbound
+bind -m vi-insert '"\C-l": clear-screen'
 
 # Machine-local overrides first (not in dotfiles repo, not stowed)
 [[ -f "$XDG_CONFIG_HOME/shell/local.sh" ]] && source "$XDG_CONFIG_HOME/shell/local.sh"
