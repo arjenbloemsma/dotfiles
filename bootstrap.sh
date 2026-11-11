@@ -20,7 +20,10 @@ HOST_PACKAGES=(tmux stow syncthing tailscale rbw neovim wireguard-tools)
 OMARCHY_PACKAGES=(podman)
 
 # Omarchy defaults that hosts don't keep
-OMARCHY_REMOVE=(docker docker-buildx docker-compose ufw-docker)
+OMARCHY_REMOVE=(docker docker-buildx docker-compose ufw-docker obsidian)
+
+# Omarchy web apps that hosts don't keep
+OMARCHY_REMOVE_WEBAPPS=("Discord" "Google Contacts" "Google Maps" "Google Messages" "Google Photos")
 
 # Detect OS and package manager
 detect_os() {
@@ -126,6 +129,14 @@ remove_omarchy_defaults() {
         sudo ufw reload >/dev/null
         echo -e "${GREEN}✓${NC} ufw-docker rules removed"
     fi
+
+    local app
+    for app in "${OMARCHY_REMOVE_WEBAPPS[@]}"; do
+        if [[ -f "$HOME/.local/share/applications/$app.desktop" ]]; then
+            OMARCHY_REMOVE_NOTIFY=false omarchy-webapp-remove "$app"
+            echo -e "${GREEN}✓${NC} $app web app removed"
+        fi
+    done
 
     echo ""
 }
