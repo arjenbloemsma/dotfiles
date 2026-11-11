@@ -203,6 +203,12 @@ run_install() {
 
 # Main
 main() {
+    # As root, $HOME is /root, so everything would land in root's home
+    if [[ $EUID -eq 0 ]]; then
+        echo -e "${RED}✗${NC} Run bootstrap without sudo. It asks for your password when it needs it."
+        exit 1
+    fi
+
     echo "🚀 Dotfiles Bootstrap"
     echo ""
 
