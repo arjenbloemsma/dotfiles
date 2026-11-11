@@ -953,8 +953,11 @@ install_tmux_plugins() {
         echo -e "${YELLOW}→${NC} Installing TPM..."
         git clone https://github.com/tmux-plugins/tpm "$HOME/.config/tmux/plugins/tpm"
         echo -e "${GREEN}✓${NC} TPM installed"
-        echo -e "${YELLOW}→${NC} Run prefix + I in tmux to install plugins"
     fi
+
+    # Skips plugins that are already installed
+    "$HOME/.config/tmux/plugins/tpm/bin/install_plugins" >/dev/null
+    echo -e "${GREEN}✓${NC} tmux plugins installed"
 
     echo ""
 }
