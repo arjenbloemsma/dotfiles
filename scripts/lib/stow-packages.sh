@@ -33,7 +33,7 @@ STOW_PACKAGES_SWAY=(
     "sway"
 )
 
-# Only stowed on Omarchy. Holds the Hyprland keybinding overrides that load
+# Only stowed on Omarchy. Holds the Hyprland keybinding and input overrides that load
 # after Omarchy's defaults, and the screensaver branding.
 STOW_PACKAGES_OMARCHY=(
     "hypr"
