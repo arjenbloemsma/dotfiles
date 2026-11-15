@@ -257,13 +257,14 @@ setup_fedora_atomic_host() {
 # host packages come from pacman in bootstrap.sh.
 setup_omarchy_host() {
     if [[ "$DRY_RUN" == true ]]; then
-        echo -e "${BLUE}→${NC} Would enable sshd and tailscaled, and set the time servers"
+        echo -e "${BLUE}→${NC} Would enable sshd and tailscaled, set the time servers, and hibernate after lid close"
         echo ""
         return
     fi
     sudo systemctl enable --now sshd >/dev/null
     sudo systemctl enable --now tailscaled >/dev/null
     "$DOTFILES_DIR/scripts/setup-time-sync.sh"
+    "$DOTFILES_DIR/scripts/setup-lid-hibernate.sh"
     echo -e "${GREEN}✓${NC} Omarchy: host provisioned"
     echo ""
 }
