@@ -38,6 +38,7 @@ INSTALL=(
     "flyctl"
     "fnm"
     "fzf"
+    "herdr"
     "httpie"
     "jq"
     "nvim"
