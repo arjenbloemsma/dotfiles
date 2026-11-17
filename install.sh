@@ -814,6 +814,34 @@ setup_dark_mode() {
     echo ""
 }
 
+# Scripts and skills use ~/drive for Proton Drive on every machine. macOS fixes
+# the sync folder location, so there ~/drive links to it. The folder appears
+# once the Proton Drive app is signed in. Elsewhere ~/drive is the sync folder.
+setup_drive_link() {
+    echo "Checking drive link..."
+
+    local link="$HOME/drive" target="" folder
+    for folder in "$HOME"/Library/CloudStorage/ProtonDrive-*-folder; do
+        [[ -d "$folder" ]] && target="$folder"
+    done
+
+    if [[ -z "$target" && -d "$link" && ! -L "$link" ]]; then
+        echo -e "${GREEN}✓${NC} ~/drive is the sync folder"
+    elif [[ -z "$target" ]]; then
+        echo -e "${YELLOW}!${NC} No Proton Drive folder found. Sign in to Proton Drive and re-run."
+    elif [[ -L "$link" && "$(readlink "$link")" == "$target" ]]; then
+        echo -e "${GREEN}✓${NC} ~/drive links to Proton Drive"
+    elif [[ -e "$link" || -L "$link" ]]; then
+        echo -e "${RED}✗${NC} ~/drive exists and is not a link to $target. Move it away and re-run." >&2
+        exit 1
+    else
+        print_action "link ~/drive to $target" true
+        execute ln -s "$target" "$link"
+    fi
+
+    echo ""
+}
+
 # Resolve safe conflicts and abort on anything ambiguous, BEFORE any package gets stowed.
 # Single complete picture for the user instead of a half-applied bootstrap.
 check_all_conflicts() {
@@ -1042,6 +1070,7 @@ main() {
     # After the vault login, so the identity can be checked against the vault
     setup_git_config
     setup_dark_mode
+    setup_drive_link
     install_tmux_plugins
     print_completion
 }
