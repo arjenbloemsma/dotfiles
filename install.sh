@@ -183,6 +183,16 @@ check_prerequisites() {
     echo ""
 }
 
+# Bitwarden CLI as a binary in ~/.local/bin, for hosts without brew
+install_bw() {
+    command -v bw >/dev/null 2>&1 && return
+    mkdir -p "$HOME/.local/bin"
+    echo "Installing Bitwarden CLI to ~/.local/bin..."
+    download_zipped_binary \
+        "https://vault.bitwarden.com/download/?app=cli&platform=linux" \
+        bw "$HOME/.local/bin"
+}
+
 # Provision a Fedora Atomic host for the devpod-based workflow.
 # Host stays minimal: host packages (tmux, stow, syncthing) come from
 # rpm-ostree layering in bootstrap.sh; user-space host tools that
@@ -216,12 +226,7 @@ setup_fedora_atomic_host() {
             "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64" \
             "$HOME/.local/bin/devpod"
     fi
-    if ! command -v bw >/dev/null 2>&1; then
-        echo "Installing Bitwarden CLI to ~/.local/bin..."
-        download_zipped_binary \
-            "https://vault.bitwarden.com/download/?app=cli&platform=linux" \
-            bw "$HOME/.local/bin"
-    fi
+    install_bw
     # docker-compose v2. `podman compose` looks in ~/.docker/cli-plugins/
     # and delegates to whatever it finds there. Needed because devpod
     # calls `compose ls`, which podman-compose v1 doesn't support.
@@ -258,10 +263,11 @@ setup_fedora_atomic_host() {
 # host packages come from pacman in bootstrap.sh.
 setup_omarchy_host() {
     if [[ "$DRY_RUN" == true ]]; then
-        echo -e "${BLUE}→${NC} Would enable sshd and tailscaled, set the time servers, and hibernate after lid close"
+        echo -e "${BLUE}→${NC} Would install bw, enable sshd and tailscaled, set the time servers, and hibernate after lid close"
         echo ""
         return
     fi
+    install_bw
     sudo systemctl enable --now sshd >/dev/null
     sudo systemctl enable --now tailscaled >/dev/null
     "$DOTFILES_DIR/scripts/setup-time-sync.sh"
