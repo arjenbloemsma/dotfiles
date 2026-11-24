@@ -201,7 +201,7 @@ install_bw() {
 # repo's .devcontainer/ and run via `devpod up <repo>`.
 setup_fedora_atomic_host() {
     if [[ "$DRY_RUN" == true ]]; then
-        echo -e "${BLUE}→${NC} Would install starship, devpod, bw and docker-compose, enable podman and tailscaled, and set the time servers"
+        echo -e "${BLUE}→${NC} Would install starship, devpod, bw and docker-compose, enable podman and tailscaled, set the time servers, and power off at 5% battery"
         echo ""
         return
     fi
@@ -255,6 +255,7 @@ setup_fedora_atomic_host() {
         -o DOTFILES_URL=https://github.com/arjenbloemsma/dotfiles \
         -o DOTFILES_SCRIPT=scripts/devcontainer-install.sh >/dev/null
     "$DOTFILES_DIR/scripts/setup-time-sync.sh"
+    "$DOTFILES_DIR/scripts/setup-low-battery-poweroff.sh"
     echo -e "${GREEN}✓${NC} Fedora Atomic: host provisioned (per-project dev envs via devpod)"
     echo ""
 }
@@ -263,7 +264,7 @@ setup_fedora_atomic_host() {
 # host packages come from pacman in bootstrap.sh.
 setup_omarchy_host() {
     if [[ "$DRY_RUN" == true ]]; then
-        echo -e "${BLUE}→${NC} Would install bw, enable sshd and tailscaled, set the time servers, and hibernate after lid close"
+        echo -e "${BLUE}→${NC} Would install bw, enable sshd and tailscaled, set the time servers, hibernate after lid close, and power off at 5% battery"
         echo ""
         return
     fi
@@ -272,6 +273,7 @@ setup_omarchy_host() {
     sudo systemctl enable --now tailscaled >/dev/null
     "$DOTFILES_DIR/scripts/setup-time-sync.sh"
     "$DOTFILES_DIR/scripts/setup-lid-hibernate.sh"
+    "$DOTFILES_DIR/scripts/setup-low-battery-poweroff.sh"
     echo -e "${GREEN}✓${NC} Omarchy: host provisioned"
     echo ""
 }

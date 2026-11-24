@@ -165,5 +165,6 @@ by `install.sh`.
 - **Machine-local overrides**: `~/.config/shell/local.sh`, sourced first by both shells, not tracked
 - **DNS** (Linux): `bootstrap.sh` runs `scripts/setup-system-dns.sh` to switch the host to Quad9 + Mullvad and ignore DHCP-supplied DNS. Idempotent.
 - **Lid close** (Omarchy laptops): `install.sh` runs `scripts/setup-lid-hibernate.sh` so a closed lid suspends and then hibernates after 10 minutes. Skipped on machines without a lid or without hibernation. Idempotent.
+- **Low battery** (Linux laptops): `install.sh` runs `scripts/setup-low-battery-poweroff.sh` so the machine warns at 20%, goes critical at 10% and powers off at 5%. UPower's stock policy acts at 2% and, without hibernation, ends in a suspend that the battery cannot outlast. Skipped on machines without a battery or UPower. Idempotent.
 - **Secrets**: git name and email live in `~/.config/git/config.local` (not tracked). `install.sh` checks them against the Vaultwarden item `git-identity` and sets them when they differ
 - **Tmux plugins**: Managed by TPM, not tracked in git
