@@ -822,6 +822,34 @@ setup_dark_mode() {
     echo ""
 }
 
+# Brave Origin as the default browser on the Linux desktops (bootstrap.sh
+# installs it). On Fedora Atomic the package only exists after the reboot that
+# follows the first bootstrap pass, so this skips until then.
+setup_default_browser() {
+    local os
+    os="$(detect_os)"
+    [[ "$os" == "fedora" || "$os" == "omarchy" ]] || return 0
+    command -v xdg-settings >/dev/null 2>&1 || return 0
+
+    echo "Checking default browser..."
+
+    local desktop="brave-origin.desktop"
+    if [[ ! -f "/usr/share/applications/$desktop" ]]; then
+        echo -e "${YELLOW}!${NC} Brave Origin is not installed yet. Reboot if bootstrap just layered it, then re-run."
+        echo ""
+        return 0
+    fi
+
+    if [[ "$(xdg-settings get default-web-browser 2>/dev/null)" == "$desktop" ]]; then
+        echo -e "${GREEN}✓${NC} Brave Origin is the default browser"
+    else
+        print_action "set Brave Origin as the default browser" true
+        execute xdg-settings set default-web-browser "$desktop"
+    fi
+
+    echo ""
+}
+
 # Scripts and skills use ~/drive for Proton Drive on every machine. macOS fixes
 # the sync folder location, so there ~/drive links to it. The folder appears
 # once the Proton Drive app is signed in. Elsewhere ~/drive is the sync folder.
@@ -1078,6 +1106,7 @@ main() {
     # After the vault login, so the identity can be checked against the vault
     setup_git_config
     setup_dark_mode
+    setup_default_browser
     setup_drive_link
     install_tmux_plugins
     print_completion

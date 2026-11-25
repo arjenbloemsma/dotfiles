@@ -19,6 +19,12 @@ HOST_PACKAGES=(tmux stow syncthing tailscale rbw neovim wireguard-tools)
 # Omarchy-only additions; Fedora Atomic ships podman in its base image
 OMARCHY_PACKAGES=(podman)
 
+# Brave Origin is the default browser on the Linux desktops. It is free on
+# Linux and comes from Brave's own repo on Fedora and from the AUR on Omarchy.
+BRAVE_REPO_URL="https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo"
+BRAVE_REPO_FILE="/etc/yum.repos.d/brave-browser.repo"
+BRAVE_AUR_PACKAGE="brave-origin-bin"
+
 # Omarchy defaults that hosts don't keep
 OMARCHY_REMOVE=(docker docker-buildx docker-compose ufw-docker obsidian)
 
@@ -76,11 +82,17 @@ install_prerequisites() {
             # On the next run all packages pass the check and bootstrap continues.
             local missing=()
             local pkg
-            for pkg in "${HOST_PACKAGES[@]}"; do
+            local -a fedora_packages=("${HOST_PACKAGES[@]}" brave-origin)
+            for pkg in "${fedora_packages[@]}"; do
                 rpm -q "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
             done
             if (( ${#missing[@]} > 0 )); then
-                rpm-ostree install --idempotent "${HOST_PACKAGES[@]}"
+                # brave-origin comes from Brave's repo, which has to be in place first
+                if [[ ! -f "$BRAVE_REPO_FILE" ]]; then
+                    echo -e "${YELLOW}→${NC} Adding the Brave repo..."
+                    sudo curl -fsSLo "$BRAVE_REPO_FILE" "$BRAVE_REPO_URL"
+                fi
+                rpm-ostree install --idempotent "${fedora_packages[@]}"
                 echo ""
                 echo -e "${YELLOW}→${NC} Layered packages installed (missing: ${missing[*]})."
                 echo -e "${YELLOW}→${NC} Reboot now (sudo systemctl reboot), then re-run this bootstrap."
@@ -90,6 +102,11 @@ install_prerequisites() {
         omarchy)
             # --needed skips what Omarchy already ships
             sudo pacman -S --needed --noconfirm "${HOST_PACKAGES[@]}" "${OMARCHY_PACKAGES[@]}"
+            # No official pacman package for Brave Origin, so it comes from the AUR
+            if ! pacman -Q "$BRAVE_AUR_PACKAGE" >/dev/null 2>&1; then
+                echo -e "${YELLOW}→${NC} Installing Brave Origin from the AUR..."
+                yay -S --needed --noconfirm "$BRAVE_AUR_PACKAGE"
+            fi
             ;;
         *)
             echo -e "${RED}✗${NC} Unsupported OS: $os"
