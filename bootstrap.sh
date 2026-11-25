@@ -77,8 +77,9 @@ install_prerequisites() {
             brew install stow
             ;;
         fedora)
-            # Fedora Atomic: layer host-only packages. If any are missing, layer
-            # them all (rpm-ostree is idempotent) and exit so the user reboots.
+            # Fedora Atomic: layer host-only packages. Layer the missing ones
+            # and exit so the user reboots. Packages the base image already
+            # ships are left out, because rpm-ostree refuses to layer those.
             # On the next run all packages pass the check and bootstrap continues.
             local missing=()
             local pkg
@@ -92,7 +93,7 @@ install_prerequisites() {
                     echo -e "${YELLOW}→${NC} Adding the Brave repo..."
                     sudo curl -fsSLo "$BRAVE_REPO_FILE" "$BRAVE_REPO_URL"
                 fi
-                rpm-ostree install --idempotent "${fedora_packages[@]}"
+                rpm-ostree install --idempotent "${missing[@]}"
                 echo ""
                 echo -e "${YELLOW}→${NC} Layered packages installed (missing: ${missing[*]})."
                 echo -e "${YELLOW}→${NC} Reboot now (sudo systemctl reboot), then re-run this bootstrap."
