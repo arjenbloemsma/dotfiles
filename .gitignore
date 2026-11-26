@@ -12,3 +12,4 @@ claude/.claude/*
 !claude/.claude/hooks/
 !claude/.claude/skills/
 !claude/.claude/agents/
+claude/.claude/skills/synced/
