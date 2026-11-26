@@ -10,6 +10,3 @@ claude/.claude/*
 !claude/.claude/CLAUDE.md
 !claude/.claude/settings.json
 !claude/.claude/hooks/
-!claude/.claude/skills/
-!claude/.claude/agents/
-claude/.claude/skills/synced/
