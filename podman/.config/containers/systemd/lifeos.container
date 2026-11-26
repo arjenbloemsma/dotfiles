@@ -1,0 +1,24 @@
+[Unit]
+Description=LifeOS DA (Akira) on fuji
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=localhost/lifeos-pod:1
+ContainerName=lifeos
+PodmanArgs=--init
+User=root
+UserNS=keep-id:uid=1000,gid=1000
+Volume=%h/lifeos-pod/home:/home/lifeos
+Tmpfs=/run/lifeos
+Secret=claude-oauth-token,target=/run/secrets/lifeos/claude-oauth-token
+Secret=lifeos-authorized-keys,target=/run/secrets/lifeos/authorized_keys
+SecurityLabelDisable=true
+PublishPort=2222:2222
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
