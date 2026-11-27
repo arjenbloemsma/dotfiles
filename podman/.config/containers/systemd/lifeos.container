@@ -19,6 +19,10 @@ PublishPort=2222:2222
 [Service]
 Restart=always
 TimeoutStartSec=300
+# Wait for a default route before starting. network-online.target can be
+# reached before Wi-Fi is up; pasta then copies virbr0 (libvirt bridge) as the
+# container's interface and the container comes up with no route out.
+ExecStartPre=/bin/sh -c 'until ip route show default | grep -q .; do sleep 1; done'
 
 [Install]
 WantedBy=default.target
